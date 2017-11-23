@@ -19,6 +19,8 @@ func (m *Manager) CreateReceiver(ctx context.Context, accID, accAlias string, ex
 		expiresAt = time.Now().Add(defaultReceiverExpiry)
 	}
 
+	/*
+	//alias is ALI:+[name], create account alias is name, so can't find the accID
 	if accAlias != "" {
 		s, err := m.FindByAlias(ctx, accAlias)
 		if err != nil {
@@ -26,6 +28,7 @@ func (m *Manager) CreateReceiver(ctx context.Context, accID, accAlias string, ex
 		}
 		accID = s.ID
 	}
+	*/
 
 	cp, err := m.CreateControlProgram(ctx, accID, false, expiresAt)
 	if err != nil {

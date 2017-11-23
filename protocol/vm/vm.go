@@ -91,6 +91,7 @@ func (vm *virtualMachine) run() error {
 
 func (vm *virtualMachine) step() error {
 	inst, err := ParseOp(vm.program, vm.pc)
+	fmt.Println("instruction:", inst.Op)
 	if err != nil {
 		return err
 	}
@@ -118,6 +119,8 @@ func (vm *virtualMachine) step() error {
 	vm.data = inst.Data
 	err = ops[inst.Op].fn(vm)
 	if err != nil {
+		fmt.Println("instruction and data:", inst.Op, inst.Data)
+		fmt.Println("vm.dataStack:", vm.dataStack)
 		return err
 	}
 	err = vm.applyCost(vm.deferredCost)

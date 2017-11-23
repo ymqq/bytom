@@ -12,6 +12,8 @@ import (
 	"github.com/bytom/errors"
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/legacy"
+	"fmt"
+	"encoding/hex"
 )
 
 func (m *Manager) NewSpendAction(amt bc.AssetAmount, accountID string, refData chainjson.Map, clientToken *string) txbuilder.Action {
@@ -27,6 +29,7 @@ func (m *Manager) NewSpendAction(amt bc.AssetAmount, accountID string, refData c
 func (m *Manager) DecodeSpendAction(data []byte) (txbuilder.Action, error) {
 	a := &spendAction{accounts: m}
 	err := json.Unmarshal(data, a)
+	fmt.Println("after DecodeSpendAction data:", a, "spendAction.AccountID:", a.AccountID)
 	return a, err
 }
 
@@ -137,6 +140,7 @@ func (a *spendUTXOAction) Build(ctx context.Context, b *txbuilder.TemplateBuilde
 			return err
 		}
 	}
+	fmt.Println("(spendUTXOAction)Build AccountID:", acct.ID)
 
 	txInput, sigInst, err := utxoToInputs(ctx, acct, res.UTXOs[0], a.ReferenceData)
 	if err != nil {
@@ -163,6 +167,10 @@ func utxoToInputs(ctx context.Context, account *signers.Signer, u *utxo, refData
 	txInput := legacy.NewSpendInput(nil, u.SourceID, u.AssetID, u.Amount, u.SourcePos, u.ControlProgram, u.RefDataHash, refData)
 
 	sigInst := &txbuilder.SigningInstruction{}
+
+	fmt.Println("account.KeyIndex:", account.KeyIndex)
+	fmt.Println("controlProgram.KeyIndex:", u.ControlProgramIndex)
+	fmt.Println("u.ControlProgram:", hex.EncodeToString(u.ControlProgram))
 
 	path := signers.Path(account, signers.AccountKeySpace, u.ControlProgramIndex)
 	sigInst.AddWitnessKeys(account.XPubs, path, account.Quorum)

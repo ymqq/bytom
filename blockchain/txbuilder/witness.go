@@ -12,6 +12,8 @@ import (
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/vm"
 	"github.com/bytom/protocol/vm/vmutil"
+	"fmt"
+	"encoding/hex"
 )
 
 // SignFunc is the function passed into Sign that produces
@@ -43,6 +45,11 @@ func materializeWitnesses(txTemplate *Template) error {
 			if err != nil {
 				return errors.WithDetailf(err, "error in witness component %d of input %d", j, i)
 			}
+		}
+
+		fmt.Println("sigInst.Position:", sigInst.Position)
+		for k, wit := range witness{
+			fmt.Println("k:", k, "witness:", hex.EncodeToString(wit))
 		}
 
 		msg.SetInputArguments(sigInst.Position, witness)
@@ -92,12 +99,15 @@ func (sw *signatureWitness) sign(ctx context.Context, tpl *Template, index uint3
 	// txsighash program if tpl.AllowAdditional is false (i.e., the tx is complete
 	// and no further changes are allowed) or a program enforcing
 	// constraints derived from the existing outputs and current input.
+	fmt.Println("before sw.program:", hex.EncodeToString(sw.Program))
 	if len(sw.Program) == 0 {
+		fmt.Println("tpl.SigningInstructions[index].Position:", tpl.SigningInstructions[index].Position)
 		sw.Program = buildSigProgram(tpl, tpl.SigningInstructions[index].Position)
 		if len(sw.Program) == 0 {
 			return ErrEmptyProgram
 		}
 	}
+	fmt.Println("after sw.program:", hex.EncodeToString(sw.Program))
 	if len(sw.Sigs) < len(sw.Keys) {
 		// Each key in sw.Keys may produce a signature in sw.Sigs. Make
 		// sure there are enough slots in sw.Sigs and that we preserve any
@@ -120,11 +130,14 @@ func (sw *signatureWitness) sign(ctx context.Context, tpl *Template, index uint3
 		for i, p := range keyID.DerivationPath {
 			path[i] = p
 		}
+		fmt.Println("i:", i, "path:", path)
 		sigBytes, err := signFn(ctx, keyID.XPub, path, h, auth)
 		if err != nil {
 			return errors.WithDetailf(err, "computing signature %d", i)
 		}
 		sw.Sigs[i] = sigBytes
+		fmt.Printf("sw.Sigs[%d]:%s\n", i, hex.EncodeToString(sw.Sigs[i]))
+		fmt.Printf("sw.Keys[%d].XPub:%s\n", i, keyID.XPub.String())
 	}
 	return nil
 }
@@ -238,6 +251,8 @@ func (si *SigningInstruction) AddWitnessKeys(xpubs []chainkd.XPub, path [][]byte
 	for _, xpub := range xpubs {
 		keyIDs = append(keyIDs, keyID{xpub, hexPath})
 	}
+
+	fmt.Println("hexPath:", hexPath)
 
 	sw := &signatureWitness{
 		Quorum: quorum,

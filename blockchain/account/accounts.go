@@ -20,6 +20,7 @@ import (
 	"github.com/bytom/errors"
 	"github.com/bytom/protocol"
 	"github.com/bytom/protocol/vm/vmutil"
+	"encoding/hex"
 )
 
 const (
@@ -246,6 +247,9 @@ func (m *Manager) createControlProgram(ctx context.Context, accountID string, ch
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("account.KeyIndex:", account.KeyIndex)
+	fmt.Println("Manager.acpIndexNext(controlProgram.KeyIndex):", idx)
+	fmt.Println("derivedPKs(account.KeyIndex + idx + account.XPubs)):", hex.EncodeToString(derivedPKs[0]))
 
 	return &controlProgram{
 		AccountID:      account.ID,
@@ -269,6 +273,31 @@ func (m *Manager) CreateControlProgram(ctx context.Context, accountID string, ch
 	}
 	return cp.ControlProgram, nil
 }
+
+// CreateContractProgram creates a contract control program
+// that is tied to the Account and stores it in the database.
+func (m *Manager) CreateContractProgram(ctx context.Context, accountID string, control []byte, change bool, expiresAt time.Time) ([]byte, error) {
+	account, err := m.findByID(ctx, accountID)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("account.KeyIndex", account.KeyIndex)
+
+	cp := &controlProgram{
+		AccountID:      account.ID,
+		KeyIndex:       0,
+		ControlProgram: control,
+		Change:         change,
+		ExpiresAt:      expiresAt,
+	}
+
+	if err = m.insertAccountControlProgram(ctx, cp); err != nil {
+		return nil, err
+	}
+	return cp.ControlProgram, nil
+}
+
 
 type controlProgram struct {
 	AccountID      string

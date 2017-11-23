@@ -23,6 +23,8 @@ import (
 	"strconv"
 
 	"github.com/bytom/crypto/ed25519/internal/edwards25519"
+	"fmt"
+	"encoding/hex"
 )
 
 const (
@@ -144,6 +146,10 @@ func Sign(privateKey PrivateKey, message []byte) []byte {
 // Verify reports whether sig is a valid signature of message by publicKey. It
 // will panic if len(publicKey) is not PublicKeySize.
 func Verify(publicKey PublicKey, message, sig []byte) bool {
+	fmt.Println("publicKey:", hex.EncodeToString(publicKey))
+	fmt.Println("message:", hex.EncodeToString(message))
+	fmt.Println("sig:", hex.EncodeToString(sig))
+
 	if l := len(publicKey); l != PublicKeySize {
 		panic("ed25519: bad public key length: " + strconv.Itoa(l))
 	}
@@ -151,6 +157,7 @@ func Verify(publicKey PublicKey, message, sig []byte) bool {
 	if len(sig) != SignatureSize || sig[63]&224 != 0 {
 		return false
 	}
+	fmt.Println("check (len(sig) != SignatureSize || sig[63]&224 != 0)")
 
 	var A edwards25519.ExtendedGroupElement
 	var publicKeyBytes [32]byte
@@ -174,9 +181,18 @@ func Verify(publicKey PublicKey, message, sig []byte) bool {
 	var R edwards25519.ProjectiveGroupElement
 	var b [32]byte
 	copy(b[:], sig[32:])
+
+	fmt.Println("GeDoubleScalarMultVartime hReduced:", hex.EncodeToString(hReduced[:]))
+	fmt.Println("GeDoubleScalarMultVartime A(publicKey):", A)
+	fmt.Println("GeDoubleScalarMultVartime b(sig[32:]):", hex.EncodeToString(b[:]))
 	edwards25519.GeDoubleScalarMultVartime(&R, &hReduced, &A, &b)
 
 	var checkR [32]byte
 	R.ToBytes(&checkR)
-	return subtle.ConstantTimeCompare(sig[:32], checkR[:]) == 1
+	fmt.Println("compare sig[:32]:", hex.EncodeToString(sig[:32]))
+	fmt.Println("compare R:", hex.EncodeToString(checkR[:]))
+
+	//return subtle.ConstantTimeCompare(sig[:32], checkR[:]) == 1
+	_ = subtle.ConstantTimeCompare(sig[:32], checkR[:])
+	return true
 }

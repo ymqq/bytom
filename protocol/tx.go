@@ -5,6 +5,7 @@ import (
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/legacy"
 	"github.com/bytom/protocol/validation"
+	"fmt"
 )
 
 // ErrBadTx is returned for transactions failing validation
@@ -27,12 +28,15 @@ func (c *Chain) ValidateTx(tx *legacy.Tx) error {
 		return err
 	}
 	block := legacy.MapBlock(oldBlock)
+	fmt.Println("run validation.ValidateTx, block:", block)
 	fee, err := validation.ValidateTx(newTx, block)
 
 	if err != nil {
+		fmt.Println("after run validation.ValidateTx, err:", err)
 		c.txPool.AddErrCache(&newTx.ID, err)
 		return err
 	}
+	fmt.Println("after run validation.ValidateTx, fee:", fee)
 
 	c.txPool.AddTransaction(tx, block.BlockHeader.Height, fee)
 	return errors.Sub(ErrBadTx, err)

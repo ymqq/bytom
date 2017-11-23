@@ -8,6 +8,7 @@ import (
 	"github.com/bytom/protocol"
 	"github.com/bytom/protocol/bc/legacy"
 	"github.com/bytom/protocol/vm"
+	"fmt"
 )
 
 var (
@@ -30,6 +31,7 @@ func FinalizeTx(ctx context.Context, c *protocol.Chain, tx *legacy.Tx) error {
 	if tx.Tx.MaxTimeMs > 0 && tx.Tx.MaxTimeMs < c.TimestampMS() {
 		return errors.Wrap(ErrRejected, "tx expired")
 	}
+	fmt.Println("run chain.ValidateTx")
 	err = c.ValidateTx(tx)
 	if errors.Root(err) == protocol.ErrBadTx {
 		return errors.Sub(ErrRejected, err)

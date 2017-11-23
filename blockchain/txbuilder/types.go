@@ -3,12 +3,12 @@ package txbuilder
 import (
 	"context"
 	"encoding/json"
-	"time"
 
 	chainjson "github.com/bytom/encoding/json"
 	"github.com/bytom/errors"
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/legacy"
+	"time"
 )
 
 // Template represents a partially- or fully-signed transaction.

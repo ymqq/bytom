@@ -8,6 +8,7 @@ import (
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/legacy"
 	"github.com/bytom/protocol/vm"
+	"fmt"
 )
 
 var retirementProgram = []byte{byte(vm.OP_FAIL)}
@@ -51,6 +52,7 @@ func (a *controlReceiverAction) Build(ctx context.Context, b *TemplateBuilder) e
 func DecodeControlProgramAction(data []byte) (Action, error) {
 	a := new(controlProgramAction)
 	err := stdjson.Unmarshal(data, a)
+	fmt.Println("after DecodeControlProgramAction data:", a, "controlProgramAction.Program:", a.Program)
 	return a, err
 }
 
