@@ -213,6 +213,7 @@ const (
 	OP_OUTPUTID    Op = 0xcb
 	OP_NONCE       Op = 0xcc
 	OP_BLOCKHEIGHT Op = 0xcd
+	OP_SETTXSIGHASH Op = 0xce
 )
 
 type opInfo struct {
@@ -323,6 +324,7 @@ var (
 		OP_OUTPUTID:    {OP_OUTPUTID, "OUTPUTID", opOutputID},
 		OP_NONCE:       {OP_NONCE, "NONCE", opNonce},
 		OP_BLOCKHEIGHT: {OP_BLOCKHEIGHT, "BLOCKHEIGHT", opBlockHeight},
+		OP_SETTXSIGHASH: {OP_SETTXSIGHASH, "SETTXSIGHASH", opSetTxSigHash},
 	}
 
 	opsByName map[string]opInfo

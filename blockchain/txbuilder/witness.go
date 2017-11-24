@@ -118,6 +118,7 @@ func (sw *signatureWitness) sign(ctx context.Context, tpl *Template, index uint3
 	}
 	var h [32]byte
 	sha3pool.Sum256(h[:], sw.Program)
+	fmt.Println("h:", hex.EncodeToString(h[:]))
 	for i, keyID := range sw.Keys {
 		if len(sw.Sigs[i]) > 0 {
 			// Already have a signature for this key

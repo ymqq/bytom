@@ -53,6 +53,15 @@ func CoinbaseProgram(pubkeys []ed25519.PublicKey, nrequired int, height uint64) 
 }
 
 // P2SPMultiSigProgram generates the script for contorl transaction output
+func SigPubProgram(pubkeys []ed25519.PublicKey) ([]byte, error) {
+	builder := NewBuilder()
+	for _, p := range pubkeys {
+		builder.AddData(p)
+	}
+	return builder.Build()
+}
+
+// P2SPMultiSigProgram generates the script for contorl transaction output
 func P2SPMultiSigProgram(pubkeys []ed25519.PublicKey, nrequired int) ([]byte, error) {
 	builder := NewBuilder()
 	if err := builder.addP2SPMultiSig(pubkeys, nrequired); err != nil {
@@ -60,6 +69,7 @@ func P2SPMultiSigProgram(pubkeys []ed25519.PublicKey, nrequired int) ([]byte, er
 	}
 	return builder.Build()
 }
+
 
 // ParseP2SPMultiSigProgram is unknow for us yet
 func ParseP2SPMultiSigProgram(program []byte) ([]ed25519.PublicKey, int, error) {

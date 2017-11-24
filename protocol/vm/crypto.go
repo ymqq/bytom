@@ -8,6 +8,8 @@ import (
 
 	"github.com/bytom/crypto/ed25519"
 	"github.com/bytom/math/checked"
+	"fmt"
+	"encoding/hex"
 )
 
 func opSha256(vm *virtualMachine) error {
@@ -135,4 +137,23 @@ func opTxSigHash(vm *virtualMachine) error {
 		return ErrContext
 	}
 	return vm.push(vm.context.TxSigHash(), false)
+}
+
+func opSetTxSigHash(vm *virtualMachine) error {
+	msg, err := vm.pop(false)
+	if err != nil {
+		return err
+	}
+	if len(msg) != 32 {
+		return ErrBadValue
+	}
+
+	txSigHashFn := func() []byte {
+		return msg
+	}
+
+	vm.context.TxSigHash = txSigHashFn
+	fmt.Println("opSetTxSigHash vm.context.TxSigHash():", hex.EncodeToString(vm.context.TxSigHash()))
+
+	return nil
 }
