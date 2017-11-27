@@ -142,6 +142,7 @@ func (bcr *BlockchainReactor) BuildHander() {
 	}
 	m.Handle("/build-transaction", jsonHandler(bcr.build))
 	m.Handle("/create-control-program", jsonHandler(bcr.createControlProgram))
+	m.Handle("/create-account-pubkey", jsonHandler(bcr.createAccountPubkey))
 	m.Handle("/create-transaction-feed", jsonHandler(bcr.createTxFeed))
 	m.Handle("/get-transaction-feed", jsonHandler(bcr.getTxFeed))
 	m.Handle("/update-transaction-feed", jsonHandler(bcr.updateTxFeed))

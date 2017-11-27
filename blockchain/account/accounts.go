@@ -15,6 +15,7 @@ import (
 	"github.com/bytom/blockchain/pin"
 	"github.com/bytom/blockchain/signers"
 	"github.com/bytom/blockchain/txbuilder"
+	"github.com/bytom/crypto/ed25519"
 	"github.com/bytom/crypto/ed25519/chainkd"
 	"github.com/bytom/crypto/sha3pool"
 	"github.com/bytom/errors"
@@ -229,6 +230,29 @@ func (m *Manager) findByID(ctx context.Context, id string) (*signers.Signer, err
 	return account.Signer, nil
 }
 
+func (m *Manager) createPubkey(ctx context.Context, accountID string) (rootXPub chainkd.XPub, pubkey ed25519.PublicKey, path [][]byte, idx uint64, err error) {
+	account, err := m.findByID(ctx, accountID)
+	if err != nil {
+		return
+	}
+	/*
+	idx, err = m.nextIndex(ctx)
+	if err != nil {
+		return
+	}*/
+	idx = 0
+	fmt.Println("account.KeyIndex", account.KeyIndex)
+	fmt.Println("idx:", idx)
+	rootXPub = account.XPubs[0]
+	path = signers.Path(account, signers.AccountKeySpace, idx)
+	derivedXPub := rootXPub.Derive(path)
+	pubkey = derivedXPub.PublicKey()
+	fmt.Println("rootXPub:", rootXPub)
+	fmt.Println("path:", path)
+	fmt.Println("pubkey:", hex.EncodeToString(pubkey))
+	return rootXPub, pubkey, path, idx, nil
+}
+
 func (m *Manager) createControlProgram(ctx context.Context, accountID string, change bool, expiresAt time.Time) (*controlProgram, error) {
 	account, err := m.findByID(ctx, accountID)
 	if err != nil {
@@ -286,12 +310,13 @@ func (m *Manager) CreateControlProgram(ctx context.Context, accountID string, ch
 
 // CreateContractProgram creates a contract control program
 // that is tied to the Account and stores it in the database.
-func (m *Manager) CreateContractProgram(ctx context.Context, accountID string, control []byte, change bool, expiresAt time.Time) ([]byte, error) {
+func (m *Manager) CreateContractProgram(ctx context.Context, accountID string, control []byte, change bool, idx uint64, expiresAt time.Time) ([]byte, error) {
 	account, err := m.findByID(ctx, accountID)
 	if err != nil {
 		return nil, err
 	}
 
+	/*
 	idx, err := m.nextIndex(ctx)
 	if err != nil {
 		return nil, err
@@ -332,11 +357,15 @@ func (m *Manager) CreateContractProgram(ctx context.Context, accountID string, c
 		return nil, err
 	}
 	fmt.Println("contract control_program:", hex.EncodeToString(ctl_program))
+	*/
+	fmt.Println("account.KeyIndex:", account.KeyIndex)
+	fmt.Println("idx:", idx)
+	fmt.Println("contract control_program:", hex.EncodeToString(control))
 
 	cp := &controlProgram{
 		AccountID:      account.ID,
 		KeyIndex:       idx,
-		ControlProgram: ctl_program,
+		ControlProgram: control,
 		Change:         change,
 		ExpiresAt:      expiresAt,
 	}

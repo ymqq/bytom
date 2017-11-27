@@ -3,12 +3,27 @@ package account
 import (
 	"context"
 	"time"
-
+	"github.com/bytom/blockchain/signers"
 	"github.com/bytom/blockchain/txbuilder"
+	"github.com/bytom/crypto/ed25519"
+	"github.com/bytom/crypto/ed25519/chainkd"
 	"github.com/bytom/errors"
 )
 
 const defaultReceiverExpiry = 30 * 24 * time.Hour // 30 days
+
+func (m *Manager) CreatePubkey(ctx context.Context, accID, accAlias string) (rootXPub chainkd.XPub, pubkey ed25519.PublicKey, path [][]byte, index uint64, err error) {
+	if accAlias != "" {
+		var s *signers.Signer
+		s, err = m.FindByAlias(ctx, accAlias)
+		if err != nil {
+			return
+		}
+		accID = s.ID
+	}
+
+	return m.createPubkey(ctx, accID)
+}
 
 // CreateReceiver creates a new account receiver for an account
 // with the provided expiry. If a zero time is provided for the
@@ -19,8 +34,6 @@ func (m *Manager) CreateReceiver(ctx context.Context, accID, accAlias string, ex
 		expiresAt = time.Now().Add(defaultReceiverExpiry)
 	}
 
-	/*
-	//alias is ALI:+[name], create account alias is name, so can't find the accID
 	if accAlias != "" {
 		s, err := m.FindByAlias(ctx, accAlias)
 		if err != nil {
@@ -28,7 +41,6 @@ func (m *Manager) CreateReceiver(ctx context.Context, accID, accAlias string, ex
 		}
 		accID = s.ID
 	}
-	*/
 
 	cp, err := m.CreateControlProgram(ctx, accID, false, expiresAt)
 	if err != nil {

@@ -142,7 +142,7 @@ func (a *spendUTXOAction) Build(ctx context.Context, b *txbuilder.TemplateBuilde
 	}
 	fmt.Println("(spendUTXOAction)Build AccountID:", acct.ID)
 
-	txInput, sigInst, err := utxoToInputs(ctx, acct, res.UTXOs[0], a.ReferenceData)
+	txInput, sigInst, err := RawUtxoToInputs(ctx, acct, res.UTXOs[0], a.ReferenceData)
 	if err != nil {
 		return err
 	}
@@ -174,6 +174,27 @@ func utxoToInputs(ctx context.Context, account *signers.Signer, u *utxo, refData
 
 	path := signers.Path(account, signers.AccountKeySpace, u.ControlProgramIndex)
 	sigInst.AddWitnessKeys(account.XPubs, path, account.Quorum)
+
+	return txInput, sigInst, nil
+}
+
+//when the action is spendUTXOAction, the type of TemplateBuilder.signingInstructions.WitnessComponents
+//will be set to RawTxSigWitness
+func RawUtxoToInputs(ctx context.Context, account *signers.Signer, u *utxo, refData []byte) (
+	*legacy.TxInput,
+	*txbuilder.SigningInstruction,
+	error,
+) {
+	txInput := legacy.NewSpendInput(nil, u.SourceID, u.AssetID, u.Amount, u.SourcePos, u.ControlProgram, u.RefDataHash, refData)
+
+	sigInst := &txbuilder.SigningInstruction{}
+
+	fmt.Println("account.KeyIndex:", account.KeyIndex)
+	fmt.Println("controlProgram.KeyIndex:", u.ControlProgramIndex)
+	fmt.Println("u.ControlProgram:", hex.EncodeToString(u.ControlProgram))
+
+	path := signers.Path(account, signers.AccountKeySpace, u.ControlProgramIndex)
+	sigInst.AddRawWitnessKeys(account.XPubs, path, account.Quorum)
 
 	return txInput, sigInst, nil
 }

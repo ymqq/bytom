@@ -120,7 +120,7 @@ func SpendTest(client *rpc.Client, args []string) {
 
 	fmt.Printf("sign tpl:%v\n", tpl[0])
 	fmt.Printf("sign tpl's SigningInstructions:%v\n", tpl[0].SigningInstructions[0])
-	fmt.Printf("SigningInstructions's SignatureWitnesses:%v\n", tpl[0].SigningInstructions[0].SignatureWitnesses[0])
+	fmt.Printf("SigningInstructions's SignatureWitnesses:%v\n", tpl[0].SigningInstructions[0].WitnessComponents[0])
 
 	// submit-transaction1-Issue
 	var submitResponse interface{}
@@ -167,7 +167,7 @@ func SpendTest(client *rpc.Client, args []string) {
 
 	fmt.Printf("sign tpl2:%v\n", tpl2[0])
 	fmt.Printf("sign tpl2's SigningInstructions:%v\n", tpl2[0].SigningInstructions[0])
-	fmt.Printf("SigningInstructions's SignatureWitnesses:%v\n", tpl2[0].SigningInstructions[0].SignatureWitnesses[0])
+	fmt.Printf("SigningInstructions's SignatureWitnesses:%v\n", tpl2[0].SigningInstructions[0].WitnessComponents[0])
 
 	// submit-transaction2-Spend_account
 	var submitResponse2 interface{}
@@ -248,7 +248,7 @@ func SpendTest(client *rpc.Client, args []string) {
 
 	fmt.Printf("sign tpl3:%v\n", tpl2[0])
 	fmt.Printf("sign tpl3's SigningInstructions:%v\n", tpl3[0].SigningInstructions[0])
-	fmt.Printf("SigningInstructions's SignatureWitnesses:%v\n", tpl3[0].SigningInstructions[0].SignatureWitnesses[0])
+	fmt.Printf("SigningInstructions's SignatureWitnesses:%v\n", tpl3[0].SigningInstructions[0].WitnessComponents[0])
 
 	// submit-transaction3-Spend_account_utxo
 	var submitResponse3 interface{}
