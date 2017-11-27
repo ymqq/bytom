@@ -14,11 +14,13 @@ import (
 
 	"github.com/bytom/blockchain/signers"
 	"github.com/bytom/blockchain/txbuilder"
+	"github.com/bytom/crypto/ed25519"
 	"github.com/bytom/crypto/ed25519/chainkd"
 	"github.com/bytom/crypto/sha3pool"
 	"github.com/bytom/errors"
 	"github.com/bytom/protocol"
 	"github.com/bytom/protocol/vm/vmutil"
+	"encoding/hex"
 )
 
 const (
@@ -216,6 +218,29 @@ func (m *Manager) findByID(ctx context.Context, id string) (*signers.Signer, err
 	return account.Signer, nil
 }
 
+func (m *Manager) createPubkey(ctx context.Context, accountID string) (rootXPub chainkd.XPub, pubkey ed25519.PublicKey, path [][]byte, idx uint64, err error) {
+	account, err := m.findByID(ctx, accountID)
+	if err != nil {
+		return
+	}
+	/*
+	idx, err = m.nextIndex(ctx)
+	if err != nil {
+		return
+	}*/
+	idx = 0
+	fmt.Println("account.KeyIndex", account.KeyIndex)
+	fmt.Println("idx:", idx)
+	rootXPub = account.XPubs[0]
+	path = signers.Path(account, signers.AccountKeySpace, idx)
+	derivedXPub := rootXPub.Derive(path)
+	pubkey = derivedXPub.PublicKey()
+	fmt.Println("rootXPub:", rootXPub)
+	fmt.Println("path:", path)
+	fmt.Println("pubkey:", hex.EncodeToString(pubkey))
+	return rootXPub, pubkey, path, idx, nil
+}
+
 func (m *Manager) createControlProgram(ctx context.Context, accountID string, change bool, expiresAt time.Time) (*controlProgram, error) {
 	account, err := m.findByID(ctx, accountID)
 	if err != nil {
@@ -233,6 +258,19 @@ func (m *Manager) createControlProgram(ctx context.Context, accountID string, ch
 	control, err := vmutil.P2SPMultiSigProgram(derivedPKs, account.Quorum)
 	if err != nil {
 		return nil, err
+	}
+	fmt.Println("account.KeyIndex:", account.KeyIndex)
+	fmt.Println("Manager.acpIndexNext(controlProgram.KeyIndex):", idx)
+	fmt.Println("derivedPKs(account.KeyIndex + idx + account.XPubs)):", hex.EncodeToString(derivedPKs[0]))
+	fmt.Println("path:", path)
+	for i, xpubs := range account.XPubs {
+		fmt.Println("i:", i, "xpubs:", xpubs)
+	}
+	for i, derivedxpubs := range derivedXPubs {
+		fmt.Println("i:", i, "derivedxpubs:", derivedxpubs)
+	}
+	for i, derivedpks := range derivedPKs {
+		fmt.Println("i:", i, "derivedpks:", derivedpks)
 	}
 
 	return &controlProgram{
@@ -257,6 +295,75 @@ func (m *Manager) CreateControlProgram(ctx context.Context, accountID string, ch
 	}
 	return cp.ControlProgram, nil
 }
+
+// CreateContractProgram creates a contract control program
+// that is tied to the Account and stores it in the database.
+func (m *Manager) CreateContractProgram(ctx context.Context, accountID string, control []byte, change bool, idx uint64, expiresAt time.Time) ([]byte, error) {
+	account, err := m.findByID(ctx, accountID)
+	if err != nil {
+		return nil, err
+	}
+
+	/*
+	idx, err := m.nextIndex(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	//var idx uint64
+	//idx = 0
+	path := signers.Path(account, signers.AccountKeySpace, idx)
+	derivedXPubs := chainkd.DeriveXPubs(account.XPubs, path)
+	derivedPKs := chainkd.XPubKeys(derivedXPubs)
+
+	fmt.Println("account.KeyIndex:", account.KeyIndex)
+	fmt.Println("Manager.acpIndexNext(controlProgram.KeyIndex):", idx)
+	fmt.Println("path:", path)
+	for i, xpubs := range account.XPubs {
+		fmt.Println("i:", i, "xpubs:", xpubs)
+	}
+	for i, derivedxpubs := range derivedXPubs {
+		fmt.Println("i:", i, "derivedxpubs:", derivedxpubs)
+	}
+	for i, derivedpks := range derivedPKs {
+		fmt.Println("i:", i, "derivedpks:", derivedpks)
+	}
+
+	control_program, err := vmutil.SigPubProgram(derivedPKs)
+	fmt.Println("control_program:", hex.EncodeToString(control_program))
+
+	var contract string
+	//if the contract is LockWithPublicKey, need to add prefix instruction OP_SHA3 OP_SETTXSIGHASH (aace)
+	if hex.EncodeToString(control) == "7403ae7cac00c0" || hex.EncodeToString(control) == "ae7cac" {
+		contract = "aace" + hex.EncodeToString(control_program) + hex.EncodeToString(control)
+	} else {
+		contract = hex.EncodeToString(control_program) + hex.EncodeToString(control)
+	}
+
+	ctl_program, err := hex.DecodeString(contract)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("contract control_program:", hex.EncodeToString(ctl_program))
+	*/
+	fmt.Println("account.KeyIndex:", account.KeyIndex)
+	fmt.Println("idx:", idx)
+	fmt.Println("contract control_program:", hex.EncodeToString(control))
+
+	cp := &controlProgram{
+		AccountID:      account.ID,
+		KeyIndex:       idx,
+		ControlProgram: control,
+		Change:         change,
+		ExpiresAt:      expiresAt,
+	}
+
+	if err = m.insertAccountControlProgram(ctx, cp); err != nil {
+		return nil, err
+	}
+	return cp.ControlProgram, nil
+}
+
 
 type controlProgram struct {
 	AccountID      string

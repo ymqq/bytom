@@ -13,7 +13,7 @@ const (
 	MaxBlockSzie = uint64(16384)
 
 	//config parameter for coinbase reward
-	CoinbasePendingBlockNumber = uint64(6)
+	CoinbasePendingBlockNumber = uint64(0)
 	subsidyReductionInterval   = uint64(560640)
 	baseSubsidy                = uint64(624000000000)
 	initialBlockSubsidy        = uint64(1470000000000000000)

@@ -29,7 +29,7 @@ func TestInferConstraints(t *testing.T) {
 		}),
 		AllowAdditional: true,
 	}
-	prog := buildSigProgram(tpl, 0)
+	prog, err := buildSigProgram(tpl, 0)
 	spID := tpl.Transaction.Tx.InputIDs[0]
 	spend, err := tpl.Transaction.Tx.Spend(spID)
 	if err != nil {
@@ -49,8 +49,8 @@ func TestInferConstraints(t *testing.T) {
 func TestWitnessJSON(t *testing.T) {
 	si := &SigningInstruction{
 		Position: 17,
-		SignatureWitnesses: []*signatureWitness{
-			&signatureWitness{
+		WitnessComponents: []witnessComponent{
+			&SignatureWitness{
 				Quorum: 4,
 				Keys: []keyID{{
 					XPub:           testutil.TestXPub,

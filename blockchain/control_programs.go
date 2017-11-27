@@ -10,6 +10,9 @@ import (
 	"github.com/bytom/errors"
 	"github.com/bytom/net/http/httpjson"
 	"github.com/bytom/net/http/reqid"
+	"fmt"
+	"encoding/hex"
+	"strconv"
 )
 
 // POST /create-control-program
@@ -34,6 +37,8 @@ func (a *BlockchainReactor) createControlProgram(ctx context.Context, ins []stru
 			switch ins[i].Type {
 			case "account":
 				prog, err = a.createAccountControlProgram(subctx, ins[i].Params)
+			case "contract":
+				prog, err = a.createContractControlProgram(subctx, ins[i].Params)
 			default:
 				err = errors.WithDetailf(httpjson.ErrBadRequest, "unknown control program type %q", ins[i].Type)
 			}
@@ -59,6 +64,7 @@ func (a *BlockchainReactor) createAccountControlProgram(ctx context.Context, inp
 		return nil, errors.WithDetailf(httpjson.ErrBadRequest, "bad parameters for account control program")
 	}
 
+	fmt.Println("parsed:", parsed)
 	accountID := parsed.AccountID
 	if accountID == "" {
 		acc, err := a.accounts.FindByAlias(ctx, parsed.AccountAlias)
@@ -67,11 +73,56 @@ func (a *BlockchainReactor) createAccountControlProgram(ctx context.Context, inp
 		}
 		accountID = acc.ID
 	}
+	fmt.Println("accountID:", accountID)
 
 	controlProgram, err := a.accounts.CreateControlProgram(ctx, accountID, false, time.Time{})
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("controlProgram:", controlProgram)
+	ret := map[string]interface{}{
+		"control_program": json.HexBytes(controlProgram),
+	}
+	return ret, nil
+}
+
+func (a *BlockchainReactor) createContractControlProgram(ctx context.Context, input []byte) (interface{}, error) {
+	var parsed struct {
+		AccountAlias string 	`json:"account_alias"`
+		AccountID    string 	`json:"account_id"`
+		ControlProgram string 	`json:"control_program"`
+		idx string 	   		    `json:"idx"`
+	}
+	err := stdjson.Unmarshal(input, &parsed)
+	if err != nil {
+		return nil, errors.WithDetailf(httpjson.ErrBadRequest, "bad parameters for account control program")
+	}
+
+	fmt.Println("parsed:", parsed)
+	accountID := parsed.AccountID
+	if accountID == "" {
+		acc, err := a.accounts.FindByAlias(ctx, parsed.AccountAlias)
+		if err != nil {
+			return nil, err
+		}
+		accountID = acc.ID
+	}
+	fmt.Println("accountID:", accountID)
+
+	control, err := hex.DecodeString(parsed.ControlProgram)
+	if err != nil {
+		return nil, err
+	}
+
+	index, err := strconv.ParseUint(parsed.idx, 10, 64)
+	fmt.Println("strconv idx:", index)
+
+	controlProgram, err := a.accounts.CreateContractProgram(ctx, accountID, control, false, index, time.Time{})
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("controlProgram:", hex.EncodeToString(controlProgram))
 
 	ret := map[string]interface{}{
 		"control_program": json.HexBytes(controlProgram),

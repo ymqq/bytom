@@ -10,11 +10,12 @@ import (
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/seed"
 	"github.com/bytom/protocol/vm"
+	"encoding/hex"
 )
 
 const (
 	defaultGasLimit = int64(80000)
-	muxGasCost      = int64(10)
+	muxGasCost      = int64(100000000000)
 	// GasRate indicates the current gas rate
 	GasRate = int64(1000)
 )
@@ -195,8 +196,9 @@ func checkValid(vs *validationState, e bc.Entry) (err error) {
 				return errors.WithDetailf(errUnbalanced, "asset %x sources - destinations = %d (should be 0)", assetID.Bytes(), amount)
 			}
 		}
-
+		fmt.Println("run case Mux vm.Verify, vs.gas.gasLeft:", vs.gas.gasLeft)
 		gasLeft, err := vm.Verify(NewTxVMContext(vs, e, e.Program, e.WitnessArguments), vs.gas.gasLeft)
+		fmt.Println("after case Mux vm.Verify, gasLeft:", gasLeft)
 		if err != nil {
 			return errors.Wrap(err, "checking mux program")
 		}
@@ -227,7 +229,9 @@ func checkValid(vs *validationState, e bc.Entry) (err error) {
 
 	case *bc.Nonce:
 		//TODO: add block heigh range check on the control program
+		fmt.Println("run case Nonce vm.Verify, vs.gas.gasLeft:", vs.gas.gasLeft)
 		gasLeft, err := vm.Verify(NewTxVMContext(vs, e, e.Program, e.WitnessArguments), vs.gas.gasLeft)
+		fmt.Println("after case Nonce vm.Verify, gasLeft:", gasLeft)
 		if err != nil {
 			return errors.Wrap(err, "checking nonce program")
 		}
@@ -274,7 +278,9 @@ func checkValid(vs *validationState, e bc.Entry) (err error) {
 			return errors.Wrapf(bc.ErrMissingEntry, "entry for issuance anchor %x not found", e.AnchorId.Bytes())
 		}
 
+		fmt.Println("run case Issuance vm.Verify, vs.gas.gasLeft:", vs.gas.gasLeft)
 		gasLeft, err := vm.Verify(NewTxVMContext(vs, e, e.WitnessAssetDefinition.IssuanceProgram, e.WitnessArguments), vs.gas.gasLeft)
+		fmt.Println("after case Issuance vm.Verify, gasLeft:", gasLeft)
 		if err != nil {
 			return errors.Wrap(err, "checking issuance program")
 		}
@@ -327,7 +333,13 @@ func checkValid(vs *validationState, e bc.Entry) (err error) {
 		if err != nil {
 			return errors.Wrap(err, "getting spend prevout")
 		}
+		fmt.Println("run case Spend vm.Verify, vs.gas.gasLeft:", vs.gas.gasLeft)
+		fmt.Println("spentOutput.ControlProgram:", hex.EncodeToString(spentOutput.ControlProgram.Code))
+		for i, witargs := range e.WitnessArguments{
+			fmt.Println("i:", i, "e.WitnessArguments:", hex.EncodeToString(witargs))
+		}
 		gasLeft, err := vm.Verify(NewTxVMContext(vs, e, spentOutput.ControlProgram, e.WitnessArguments), vs.gas.gasLeft)
+		fmt.Println("after case Spend vm.Verify, gasLeft:", gasLeft)
 		if err != nil {
 			return errors.Wrap(err, "checking control program")
 		}

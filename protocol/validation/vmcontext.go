@@ -7,6 +7,8 @@ import (
 	"github.com/bytom/errors"
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/vm"
+	"fmt"
+	"encoding/hex"
 )
 
 // NewTxVMContext generates the vm.Context for BVM
@@ -111,6 +113,7 @@ func NewTxVMContext(vs *validationState, entry bc.Entry, prog *bc.Program, args 
 		CheckOutput:   ec.checkOutput,
 	}
 
+	fmt.Println("NewTxVMContext TxSigHash:", hex.EncodeToString(result.TxSigHash()))
 	return result
 }
 

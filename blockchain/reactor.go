@@ -78,22 +78,6 @@ type BlockchainReactor struct {
 	evsw          types.EventSwitch
 }
 
-const (
-	SUCCESS = "success"
-	FAIL    = "fail"
-	ERROR   = "error"
-)
-
-// DefaultRawResponse is used as the default response when fail to get data
-var DefaultRawResponse = []byte(`{"Status":"error","Msg":"Unable to get data","Data":null}`)
-
-// Response describes the response standard.
-type Response struct {
-	Status string   `json:"status"`
-	Msg    string   `json:"msg"`
-	Data   []string `json:"data"`
-}
-
 func batchRecover(ctx context.Context, v *interface{}) {
 	if r := recover(); r != nil {
 		var err error
@@ -172,6 +156,7 @@ func (bcr *BlockchainReactor) BuildHander() {
 
 	m.Handle("/build-transaction", jsonHandler(bcr.build))
 	m.Handle("/create-control-program", jsonHandler(bcr.createControlProgram))
+	m.Handle("/create-account-pubkey", jsonHandler(bcr.createAccountPubkey))
 	m.Handle("/create-transaction-feed", jsonHandler(bcr.createTxFeed))
 	m.Handle("/get-transaction-feed", jsonHandler(bcr.getTxFeed))
 	m.Handle("/update-transaction-feed", jsonHandler(bcr.updateTxFeed))

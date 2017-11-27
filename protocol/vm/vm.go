@@ -65,6 +65,7 @@ func Verify(context *Context, gasLimit int64) (gasLeft int64, err error) {
 		}
 	}
 
+	fmt.Println("context.TxSigHash:", hex.EncodeToString(context.TxSigHash()))
 	err = vm.run()
 	if err == nil && vm.falseResult() {
 		err = ErrFalseVMResult
@@ -91,6 +92,11 @@ func (vm *virtualMachine) run() error {
 
 func (vm *virtualMachine) step() error {
 	inst, err := ParseOp(vm.program, vm.pc)
+	fmt.Println("instruction:", inst.Op)
+	for i, data := range vm.dataStack{
+		fmt.Println("i:", i, "vm.dataStack:", hex.EncodeToString(data))
+	}
+
 	if err != nil {
 		return err
 	}
@@ -118,6 +124,8 @@ func (vm *virtualMachine) step() error {
 	vm.data = inst.Data
 	err = ops[inst.Op].fn(vm)
 	if err != nil {
+		fmt.Println("instruction and data:", inst.Op, inst.Data)
+		fmt.Println("vm.dataStack:", vm.dataStack)
 		return err
 	}
 	err = vm.applyCost(vm.deferredCost)
