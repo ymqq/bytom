@@ -12,7 +12,7 @@ import (
 
 const defaultReceiverExpiry = 30 * 24 * time.Hour // 30 days
 
-func (m *Manager) CreatePubkey(ctx context.Context, accID, accAlias string) (rootXPub chainkd.XPub, pubkey ed25519.PublicKey, path [][]byte, index uint64, err error) {
+func (m *Manager) CreatePubkey(ctx context.Context, accID, accAlias string) (rootXPub chainkd.XPub, pubkey ed25519.PublicKey, path [][]byte, err error) {
 	if accAlias != "" {
 		var s *signers.Signer
 		s, err = m.FindByAlias(ctx, accAlias)

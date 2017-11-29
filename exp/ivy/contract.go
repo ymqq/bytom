@@ -6,29 +6,43 @@ import (
 	"encoding/hex"
 	"github.com/bytom/exp/ivy/instance"
 	"strings"
+	"strconv"
+	"time"
+	"github.com/bytom/protocol/bc"
+	"io"
+)
+
+// the TimeLayout by time Template
+const (
+	TimeLayout string = "2006-01-02 15:05:05"
 )
 
 func main() {
 	if(len(os.Args) < 2) {
-		fmt.Println("command args: [template_contract_name]")
-		os.Exit(1)
+		help(os.Stdout)
+		os.Exit(0)
 	}
+
+	var tmp [32]byte
+	var result string
 
 	template_contract_name := strings.TrimSpace(os.Args[1])
 
-	var result string
 	switch template_contract_name {
 	case "LockWithPublicKey":
 		if(len(os.Args) != 3) {
-			fmt.Println("add args: [pubkey]")
+			fmt.Println("args: [pubkey]\n\n")
+			os.Exit(0)
 		}
 		pubkey := os.Args[2]
-		pubkeyvalue, _:= hex.DecodeString(pubkey)
+		pubkeyvalue, _ := hex.DecodeString(pubkey)
+
 		out, _ := instance.PayToLockWithPublicKey(pubkeyvalue)
 		result = hex.EncodeToString(out)
 	case "LockWithMultiSig":
 		if(len(os.Args) != 5) {
-			fmt.Println("add args: [pubkey1] [pubkey2] [pubkey3]")
+			fmt.Println("args: [pubkey1] [pubkey2] [pubkey3]\n\n")
+			os.Exit(0)
 		}
 		pubkey1 := os.Args[2]
 		pubkey2 := os.Args[3]
@@ -41,8 +55,8 @@ func main() {
 		result = hex.EncodeToString(out)
 	case "LockWithPublicKeyHash":
 		if(len(os.Args) != 3) {
-			fmt.Println("add args: [pubKeyHash]")
-			os.Exit(1)
+			fmt.Println("args: [pubKeyHash]\n\n")
+			os.Exit(0)
 		}
 		pubkeyhash := os.Args[2]
 		hashvalue, _:= hex.DecodeString(pubkeyhash)
@@ -50,17 +64,99 @@ func main() {
 		out, _ := instance.PayToLockWithPublicKeyHash(hashvalue)
 		result = hex.EncodeToString(out)
 	case "TradeOffer":
-		result = hex.EncodeToString(instance.TradeOffer_body_bytes)
+		if(len(os.Args) != 6) {
+			fmt.Println("args: [assetid] [amount] [seller] [pubkey]\n\n")
+			os.Exit(0)
+		}
+		assetRequested := os.Args[2]
+		amountRequested := os.Args[3]
+		seller := os.Args[4]
+		pubkey := os.Args[5]
+
+		asset, _:= hex.DecodeString(assetRequested)
+		copy(tmp[:], asset[:32])
+		assetid := bc.NewAssetID(tmp)
+		fmt.Println("assetid:", assetid)
+
+		amount, _ := strconv.ParseUint(amountRequested, 10, 64)
+		sell, _:= hex.DecodeString(seller)
+		pub, _:= hex.DecodeString(pubkey)
+
+		out, _ := instance.PayToTradeOffer(assetid, amount, sell, pub)
+		result = hex.EncodeToString(out)
 	case "Escrow":
-		result = hex.EncodeToString(instance.Escrow_body_bytes)
+		if(len(os.Args) != 5) {
+			fmt.Println("args: [pubkey] [sender] [recipient]\n\n")
+			os.Exit(0)
+		}
+		pubkey := os.Args[2]
+		sender := os.Args[3]
+		recipient := os.Args[4]
+
+		pub, _:= hex.DecodeString(pubkey)
+		send, _:= hex.DecodeString(sender)
+		recip, _:= hex.DecodeString(recipient)
+
+		out, _ := instance.PayToEscrow(pub, send, recip)
+		result = hex.EncodeToString(out)
 	case "CallOption":
-		result = hex.EncodeToString(instance.CallOption_body_bytes)
+		if(len(os.Args) != 7) {
+			fmt.Println("args: [price] [assetid] [seller] [buyerKey] [deadline]\n\n")
+			os.Exit(0)
+		}
+		strikePrice := os.Args[2]
+		strikeCurrency := os.Args[3]
+		seller := os.Args[4]
+		buyerKey := os.Args[5]
+		deadline := os.Args[6]
+
+		asset, _:= hex.DecodeString(strikeCurrency)
+		copy(tmp[:], asset[:32])
+		assetid := bc.NewAssetID(tmp)
+		fmt.Println("assetid:", assetid)
+
+		price, _:= strconv.ParseUint(strikePrice, 10, 64)
+		sell, _:= hex.DecodeString(seller)
+		pub, _:= hex.DecodeString(buyerKey)
+
+		deadline = strings.Replace(deadline, "*", " ", -1)
+		loc, _ := time.LoadLocation("Local")
+		expiretime, _ := time.ParseInLocation(TimeLayout, deadline, loc)
+		fmt.Println("expiretime:", expiretime)
+
+		out, _ := instance.PayToCallOption(price, assetid, sell, pub, expiretime)
+		result = hex.EncodeToString(out)
 	case "LoanCollateral":
-		result = hex.EncodeToString(instance.LoanCollateral_body_bytes)
+		if(len(os.Args) != 7) {
+			fmt.Println("args: [assetid] [amount] [duetime] [lender] [borrower]\n\n")
+			os.Exit(0)
+		}
+		assetLoaned := os.Args[2]
+		amountLoaned := os.Args[3]
+		repaymentDue := os.Args[4]
+		lender := os.Args[5]
+		borrower := os.Args[6]
+
+		asset, _:= hex.DecodeString(assetLoaned)
+		copy(tmp[:], asset[:32])
+		assetid := bc.NewAssetID(tmp)
+		fmt.Println("assetid:", assetid)
+
+		amount, _:= strconv.ParseUint(amountLoaned, 10, 64)
+		lend, _:= hex.DecodeString(lender)
+		borrow, _:= hex.DecodeString(borrower)
+
+		repaymentDue = strings.Replace(repaymentDue, "*", " ", -1)
+		loc, _ := time.LoadLocation("Local")
+		duetime, _ := time.ParseInLocation(TimeLayout, repaymentDue, loc)
+		fmt.Println("duetime:", duetime)
+
+		out, _ := instance.PayToLoanCollateral(assetid, amount, duetime, lend, borrow)
+		result = hex.EncodeToString(out)
 	case "RevealPreimage":
 		if(len(os.Args) != 3) {
-			fmt.Println("add args: [hash]")
-			os.Exit(1)
+			fmt.Println("args: [hash]\n\n")
+			os.Exit(0)
 		}
 		hash := os.Args[2]
 		hashvalue, _:= hex.DecodeString(hash)
@@ -68,9 +164,23 @@ func main() {
 		out, _ := instance.PayToRevealPreimage(hashvalue)
 		result = hex.EncodeToString(out)
 	default:
-		fmt.Printf("Error: the contract[%s] is not in ivy template contract\n", template_contract_name)
+		fmt.Printf("Error: the contract [%s] is not in ivy template contract\n\n\n", template_contract_name)
 		os.Exit(0)
 	}
 
-	fmt.Printf("the result: %s\n", result)
+	fmt.Printf("The Result ControlProgram:\n%s\n\n", result)
+}
+
+func help(w io.Writer) {
+	fmt.Fprintln(w, "usage: ivy [command] [arguments]")
+	fmt.Fprint(w, "\nThe commands are:\n\n")
+	fmt.Fprintln(w, "\t LockWithPublicKey")
+	fmt.Fprintln(w, "\t LockWithMultiSig")
+	fmt.Fprintln(w, "\t LockWithPublicKeyHash")
+	fmt.Fprintln(w, "\t TradeOffer")
+	fmt.Fprintln(w, "\t Escrow")
+	fmt.Fprintln(w, "\t CallOption")
+	fmt.Fprintln(w, "\t LoanCollateral")
+	fmt.Fprintln(w, "\t RevealPreimage")
+	fmt.Fprintln(w)
 }

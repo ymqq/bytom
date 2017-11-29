@@ -163,6 +163,8 @@ func checkValid(vs *validationState, e bc.Entry) (err error) {
 	case *bc.Mux:
 		parity := make(map[bc.AssetID]int64)
 		for i, src := range e.Sources {
+			fmt.Println("e.Sources, i:", i, " parity[*src.Value.AssetId]:", parity[*src.Value.AssetId],
+				" src.Value.Amount:", src.Value.Amount)
 			sum, ok := checked.AddInt64(parity[*src.Value.AssetId], int64(src.Value.Amount))
 			if !ok {
 				return errors.WithDetailf(errOverflow, "adding %d units of asset %x from mux source %d to total %d overflows int64", src.Value.Amount, src.Value.AssetId.Bytes(), i, parity[*src.Value.AssetId])
@@ -172,6 +174,8 @@ func checkValid(vs *validationState, e bc.Entry) (err error) {
 
 		for i, dest := range e.WitnessDestinations {
 			sum, ok := parity[*dest.Value.AssetId]
+			fmt.Println("e.WitnessDestinations, i:", i, " parity[*dest.Value.AssetId]:", parity[*dest.Value.AssetId], " sum:", sum,
+				" dest.Value.Amount:", dest.Value.Amount)
 			if !ok {
 				return errors.WithDetailf(errNoSource, "mux destination %d, asset %x, has no corresponding source", i, dest.Value.AssetId.Bytes())
 			}
@@ -192,6 +196,7 @@ func checkValid(vs *validationState, e bc.Entry) (err error) {
 		}
 
 		for assetID, amount := range parity {
+			fmt.Println("amount:", amount, "assetID:", assetID.String())
 			if amount != 0 && assetID != *consensus.BTMAssetID {
 				return errors.WithDetailf(errUnbalanced, "asset %x sources - destinations = %d (should be 0)", assetID.Bytes(), amount)
 			}

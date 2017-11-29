@@ -12,7 +12,6 @@ import (
 	"github.com/bytom/net/http/reqid"
 	"fmt"
 	"encoding/hex"
-	"strconv"
 )
 
 // POST /create-control-program
@@ -92,7 +91,7 @@ func (a *BlockchainReactor) createContractControlProgram(ctx context.Context, in
 		AccountAlias string 	`json:"account_alias"`
 		AccountID    string 	`json:"account_id"`
 		ControlProgram string 	`json:"control_program"`
-		idx string 	   		    `json:"idx"`
+		Index string  		    `json:"index"`
 	}
 	err := stdjson.Unmarshal(input, &parsed)
 	if err != nil {
@@ -115,10 +114,7 @@ func (a *BlockchainReactor) createContractControlProgram(ctx context.Context, in
 		return nil, err
 	}
 
-	index, err := strconv.ParseUint(parsed.idx, 10, 64)
-	fmt.Println("strconv idx:", index)
-
-	controlProgram, err := a.accounts.CreateContractProgram(ctx, accountID, control, false, index, time.Time{})
+	controlProgram, err := a.accounts.CreateContractProgram(ctx, accountID, control, false, parsed.Index, time.Time{})
 	if err != nil {
 		return nil, err
 	}

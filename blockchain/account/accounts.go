@@ -21,6 +21,7 @@ import (
 	"github.com/bytom/protocol"
 	"github.com/bytom/protocol/vm/vmutil"
 	"encoding/hex"
+	"strconv"
 )
 
 const (
@@ -218,27 +219,24 @@ func (m *Manager) findByID(ctx context.Context, id string) (*signers.Signer, err
 	return account.Signer, nil
 }
 
-func (m *Manager) createPubkey(ctx context.Context, accountID string) (rootXPub chainkd.XPub, pubkey ed25519.PublicKey, path [][]byte, idx uint64, err error) {
+func (m *Manager) createPubkey(ctx context.Context, accountID string) (rootXPub chainkd.XPub, pubkey ed25519.PublicKey, path [][]byte, err error) {
 	account, err := m.findByID(ctx, accountID)
 	if err != nil {
 		return
 	}
-	/*
-	idx, err = m.nextIndex(ctx)
+
+	fmt.Println("account.KeyIndex:", account.KeyIndex)
+	idx, err := m.nextIndex(ctx)
 	if err != nil {
 		return
-	}*/
-	idx = 0
-	fmt.Println("account.KeyIndex", account.KeyIndex)
-	fmt.Println("idx:", idx)
+	}
+	fmt.Println("createPubkey idx:", idx)
+
 	rootXPub = account.XPubs[0]
 	path = signers.Path(account, signers.AccountKeySpace, idx)
 	derivedXPub := rootXPub.Derive(path)
 	pubkey = derivedXPub.PublicKey()
-	fmt.Println("rootXPub:", rootXPub)
-	fmt.Println("path:", path)
-	fmt.Println("pubkey:", hex.EncodeToString(pubkey))
-	return rootXPub, pubkey, path, idx, nil
+	return rootXPub, pubkey, path, nil
 }
 
 func (m *Manager) createControlProgram(ctx context.Context, accountID string, change bool, expiresAt time.Time) (*controlProgram, error) {
@@ -298,7 +296,7 @@ func (m *Manager) CreateControlProgram(ctx context.Context, accountID string, ch
 
 // CreateContractProgram creates a contract control program
 // that is tied to the Account and stores it in the database.
-func (m *Manager) CreateContractProgram(ctx context.Context, accountID string, control []byte, change bool, idx uint64, expiresAt time.Time) ([]byte, error) {
+func (m *Manager) CreateContractProgram(ctx context.Context, accountID string, control []byte, change bool, index string, expiresAt time.Time) ([]byte, error) {
 	account, err := m.findByID(ctx, accountID)
 	if err != nil {
 		return nil, err
@@ -345,7 +343,24 @@ func (m *Manager) CreateContractProgram(ctx context.Context, accountID string, c
 		return nil, err
 	}
 	fmt.Println("contract control_program:", hex.EncodeToString(ctl_program))
+
+	var idx uint64
+	idx = 0
 	*/
+
+	var idx uint64
+	if index == ""{
+		idx, err = m.nextIndex(ctx)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		idx, err = strconv.ParseUint(index, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	fmt.Println("account.KeyIndex:", account.KeyIndex)
 	fmt.Println("idx:", idx)
 	fmt.Println("contract control_program:", hex.EncodeToString(control))

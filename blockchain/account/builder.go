@@ -29,7 +29,6 @@ func (m *Manager) NewSpendAction(amt bc.AssetAmount, accountID string, refData c
 func (m *Manager) DecodeSpendAction(data []byte) (txbuilder.Action, error) {
 	a := &spendAction{accounts: m}
 	err := json.Unmarshal(data, a)
-	fmt.Println("after DecodeSpendAction data:", a, "spendAction.AccountID:", a.AccountID)
 	return a, err
 }
 
@@ -123,6 +122,7 @@ func (a *spendUTXOAction) Build(ctx context.Context, b *txbuilder.TemplateBuilde
 	if a.OutputID == nil {
 		return txbuilder.MissingFieldsError("output_id")
 	}
+	fmt.Println("output_id:", a.OutputID.String())
 
 	res, err := a.accounts.utxoDB.ReserveUTXO(ctx, *a.OutputID, a.ClientToken, b.MaxTime())
 	if err != nil {

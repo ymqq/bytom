@@ -9,7 +9,6 @@ import (
 	chainjson "github.com/bytom/encoding/json"
 	"github.com/bytom/net/http/reqid"
 	"fmt"
-	"strconv"
 )
 
 type (
@@ -21,7 +20,6 @@ type (
 		Root   chainkd.XPub         `json:"root_xpub"`
 		Pubkey chainjson.HexBytes   `json:"pubkey"`
 		Path   []chainjson.HexBytes `json:"pubkey_derivation_path"`
-		idx string 	   		   		`json:"idx"`
 	}
 )
 
@@ -29,17 +27,14 @@ type (
 func (a *BlockchainReactor) createAccountPubkey(ctx context.Context, req createAccountPubkeyRequest) (createAccountPubkeyResponse) {
 	fmt.Println("===========================================================")
 	fmt.Println("createAccountPubkeyRequest:", req.AccountID)
-	root, pubkey, path, index, err := a.accounts.CreatePubkey(ctx, req.AccountID, req.AccountAlias)
+	root, pubkey, path, err := a.accounts.CreatePubkey(ctx, req.AccountID, req.AccountAlias)
 	if err != nil {
 		return createAccountPubkeyResponse{}
 	}
 
-	idxkey := strconv.FormatUint(index, 10)
-	fmt.Println("res.idx", idxkey)
 	res := createAccountPubkeyResponse{
 		Root:   root,
 		Pubkey: chainjson.HexBytes(pubkey),
-		idx: idxkey,
 	}
 	for _, p := range path {
 		res.Path = append(res.Path, chainjson.HexBytes(p))

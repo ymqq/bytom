@@ -119,6 +119,11 @@ func AddCommands() {
 	BytomcliCmd.AddCommand(deleteAccessTokenCmd)
 	BytomcliCmd.AddCommand(checkAccessTokenCmd)
 
+	BytomcliCmd.AddCommand(createPubkeyCmd)
+	BytomcliCmd.AddCommand(createContractAccountCmd)
+	BytomcliCmd.AddCommand(BuildLockContractCmd)
+	BytomcliCmd.AddCommand(BuildUnlockContractCmd)
+
 	BytomcliCmd.AddCommand(versionCmd)
 }
 
