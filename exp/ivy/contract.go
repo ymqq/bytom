@@ -1,4 +1,4 @@
-package ivy
+package main
 
 import (
 	"fmt"
@@ -19,17 +19,36 @@ func main() {
 	var result string
 	switch template_contract_name {
 	case "LockWithPublicKey":
-		if(len(os.Args) != 2) {
+		if(len(os.Args) != 3) {
 			fmt.Println("add args: [pubkey]")
 		}
 		pubkey := os.Args[2]
 		pubkeyvalue, _:= hex.DecodeString(pubkey)
-		out, _ := instance.PayToRevealPreimage(pubkeyvalue)
+		out, _ := instance.PayToLockWithPublicKey(pubkeyvalue)
 		result = hex.EncodeToString(out)
 	case "LockWithMultiSig":
-		result = hex.EncodeToString(instance.LockWithMultiSig_body_bytes)
+		if(len(os.Args) != 5) {
+			fmt.Println("add args: [pubkey1] [pubkey2] [pubkey3]")
+		}
+		pubkey1 := os.Args[2]
+		pubkey2 := os.Args[3]
+		pubkey3 := os.Args[4]
+		pub1, _:= hex.DecodeString(pubkey1)
+		pub2, _:= hex.DecodeString(pubkey2)
+		pub3, _:= hex.DecodeString(pubkey3)
+
+		out, _ := instance.PayToLockWithMultiSig(pub1, pub2, pub3)
+		result = hex.EncodeToString(out)
 	case "LockWithPublicKeyHash":
-		result = hex.EncodeToString(instance.LockWithPublicKeyHash_body_bytes)
+		if(len(os.Args) != 3) {
+			fmt.Println("add args: [pubKeyHash]")
+			os.Exit(1)
+		}
+		pubkeyhash := os.Args[2]
+		hashvalue, _:= hex.DecodeString(pubkeyhash)
+
+		out, _ := instance.PayToLockWithPublicKeyHash(hashvalue)
+		result = hex.EncodeToString(out)
 	case "TradeOffer":
 		result = hex.EncodeToString(instance.TradeOffer_body_bytes)
 	case "Escrow":
@@ -45,6 +64,7 @@ func main() {
 		}
 		hash := os.Args[2]
 		hashvalue, _:= hex.DecodeString(hash)
+
 		out, _ := instance.PayToRevealPreimage(hashvalue)
 		result = hex.EncodeToString(out)
 	default:

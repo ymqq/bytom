@@ -41,6 +41,7 @@ func (tx *Tx) SetInputArguments(n uint32, args [][]byte) {
 		e.WitnessArguments = args
 	case *bc.Spend:
 		e.WitnessArguments = args
+		fmt.Println("e.WitnessArguments:", e.WitnessArguments)
 	}
 }
 

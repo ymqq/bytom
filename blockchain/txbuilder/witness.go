@@ -43,3 +43,25 @@ func materializeWitnesses(txTemplate *Template) error {
 
 	return nil
 }
+
+func SetWitnessArguments(txTemplate *Template, args [][]byte) error {
+	msg := txTemplate.Transaction
+
+	if msg == nil {
+		return errors.Wrap(ErrMissingRawTx)
+	}
+
+	if len(txTemplate.SigningInstructions) > len(msg.Inputs) {
+		return errors.Wrap(ErrBadInstructionCount)
+	}
+
+	for i, sigInst := range txTemplate.SigningInstructions {
+		if msg.Inputs[sigInst.Position] == nil {
+			return errors.WithDetailf(ErrBadTxInputIdx, "signing instruction %d references missing tx input %d", i, sigInst.Position)
+		}
+
+		msg.SetInputArguments(sigInst.Position, args)
+	}
+
+	return nil
+}
