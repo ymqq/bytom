@@ -5,6 +5,7 @@ import (
 
 	"github.com/bytom/crypto/ed25519/chainkd"
 	"github.com/bytom/errors"
+	"fmt"
 )
 
 // SignFunc is the function passed into Sign that produces
@@ -37,7 +38,7 @@ func materializeWitnesses(txTemplate *Template) error {
 				return errors.WithDetailf(err, "error in witness component %d of input %d", j, i)
 			}
 		}
-
+		fmt.Println("After func materialize, witness:", witness)
 		msg.SetInputArguments(sigInst.Position, witness)
 	}
 

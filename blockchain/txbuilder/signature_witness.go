@@ -84,7 +84,7 @@ func (sw *SignatureWitness) sign(ctx context.Context, tpl *Template, index uint3
 				break
 			}
 		}
-		if !found {
+		if xpubs != nil && !found {
 			continue
 		}
 		path := make([]([]byte), len(keyID.DerivationPath))

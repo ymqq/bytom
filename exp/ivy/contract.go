@@ -39,6 +39,14 @@ func main() {
 
 		out, _ := instance.PayToLockWithPublicKey(pubkeyvalue)
 		result = hex.EncodeToString(out)
+
+		//check the program
+		_, err := instance.ParsePayToLockWithPublicKey(out)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
 	case "LockWithMultiSig":
 		if(len(os.Args) != 5) {
 			fmt.Println("args: [pubkey1] [pubkey2] [pubkey3]\n\n")
@@ -53,6 +61,14 @@ func main() {
 
 		out, _ := instance.PayToLockWithMultiSig(pub1, pub2, pub3)
 		result = hex.EncodeToString(out)
+
+		//check the program
+		_, err := instance.ParsePayToLockWithMultiSig(out)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
 	case "LockWithPublicKeyHash":
 		if(len(os.Args) != 3) {
 			fmt.Println("args: [pubKeyHash]\n\n")
@@ -63,6 +79,14 @@ func main() {
 
 		out, _ := instance.PayToLockWithPublicKeyHash(hashvalue)
 		result = hex.EncodeToString(out)
+
+		//check the program
+		_, err := instance.ParsePayToLockWithPublicKeyHash(out)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
 	case "TradeOffer":
 		if(len(os.Args) != 6) {
 			fmt.Println("args: [assetid] [amount] [seller] [pubkey]\n\n")
@@ -76,7 +100,7 @@ func main() {
 		asset, _:= hex.DecodeString(assetRequested)
 		copy(tmp[:], asset[:32])
 		assetid := bc.NewAssetID(tmp)
-		fmt.Println("assetid:", assetid)
+		//fmt.Println("assetid:", assetid)
 
 		amount, _ := strconv.ParseUint(amountRequested, 10, 64)
 		sell, _:= hex.DecodeString(seller)
@@ -84,6 +108,14 @@ func main() {
 
 		out, _ := instance.PayToTradeOffer(assetid, amount, sell, pub)
 		result = hex.EncodeToString(out)
+
+		//check the program
+		_, err := instance.ParsePayToTradeOffer(out)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
 	case "Escrow":
 		if(len(os.Args) != 5) {
 			fmt.Println("args: [pubkey] [sender] [recipient]\n\n")
@@ -99,6 +131,14 @@ func main() {
 
 		out, _ := instance.PayToEscrow(pub, send, recip)
 		result = hex.EncodeToString(out)
+
+		//check the program
+		_, err := instance.ParsePayToEscrow(out)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
 	case "CallOption":
 		if(len(os.Args) != 7) {
 			fmt.Println("args: [price] [assetid] [seller] [buyerKey] [deadline]\n\n")
@@ -113,7 +153,6 @@ func main() {
 		asset, _:= hex.DecodeString(strikeCurrency)
 		copy(tmp[:], asset[:32])
 		assetid := bc.NewAssetID(tmp)
-		fmt.Println("assetid:", assetid)
 
 		price, _:= strconv.ParseUint(strikePrice, 10, 64)
 		sell, _:= hex.DecodeString(seller)
@@ -122,10 +161,18 @@ func main() {
 		deadline = strings.Replace(deadline, "*", " ", -1)
 		loc, _ := time.LoadLocation("Local")
 		expiretime, _ := time.ParseInLocation(TimeLayout, deadline, loc)
-		fmt.Println("expiretime:", expiretime)
+		//fmt.Println("expiretime:", expiretime)
 
 		out, _ := instance.PayToCallOption(price, assetid, sell, pub, expiretime)
 		result = hex.EncodeToString(out)
+
+		//check the program
+		_, err := instance.ParsePayToCallOption(out)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
 	case "LoanCollateral":
 		if(len(os.Args) != 7) {
 			fmt.Println("args: [assetid] [amount] [duetime] [lender] [borrower]\n\n")
@@ -140,7 +187,6 @@ func main() {
 		asset, _:= hex.DecodeString(assetLoaned)
 		copy(tmp[:], asset[:32])
 		assetid := bc.NewAssetID(tmp)
-		fmt.Println("assetid:", assetid)
 
 		amount, _:= strconv.ParseUint(amountLoaned, 10, 64)
 		lend, _:= hex.DecodeString(lender)
@@ -149,10 +195,18 @@ func main() {
 		repaymentDue = strings.Replace(repaymentDue, "*", " ", -1)
 		loc, _ := time.LoadLocation("Local")
 		duetime, _ := time.ParseInLocation(TimeLayout, repaymentDue, loc)
-		fmt.Println("duetime:", duetime)
+		//fmt.Println("duetime:", duetime)
 
 		out, _ := instance.PayToLoanCollateral(assetid, amount, duetime, lend, borrow)
 		result = hex.EncodeToString(out)
+
+		//check the program
+		_, err := instance.ParsePayToLoanCollateral(out)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
 	case "RevealPreimage":
 		if(len(os.Args) != 3) {
 			fmt.Println("args: [hash]\n\n")
@@ -163,6 +217,14 @@ func main() {
 
 		out, _ := instance.PayToRevealPreimage(hashvalue)
 		result = hex.EncodeToString(out)
+
+		//check the program
+		_, err := instance.ParsePayToRevealPreimage(out)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
 	default:
 		fmt.Printf("Error: the contract [%s] is not in ivy template contract\n\n\n", template_contract_name)
 		os.Exit(0)

@@ -52,6 +52,36 @@ func (si *SigningInstruction) AddRawWitnessKeys(xpubs []chainkd.XPub, path [][]b
 	si.WitnessComponents = append(si.WitnessComponents, sw)
 }
 
+// AddRawTxSigWitness
+func (si *SigningInstruction) AddRawTxSigWitness(xpubs []chainkd.XPub, path [][]chainjson.HexBytes, quorum int) error {
+	if len(path) != len(xpubs) && len(xpubs) != quorum {
+		buf := fmt.Sprintf("length is not equal, len(path):%d ,len(xpubs):%d , quorum:%d", len(path), len(xpubs), quorum)
+		err := errors.New(buf)
+		return err
+	}
+
+	keyIDs := make([]keyID, 0, len(xpubs))
+	for i, xpub := range xpubs {
+		fmt.Println("AddRawWitnessKeys account.XPubs:", xpub.String())
+		keyIDs = append(keyIDs, keyID{xpub, path[i]})
+	}
+
+	sw := &RawTxSigWitness{
+		Quorum: quorum,
+		Keys:   keyIDs,
+	}
+	si.WitnessComponents = append(si.WitnessComponents, sw)
+	return nil
+}
+
+// AddDataWitness
+func (si *SigningInstruction) AddDataWitness(datawit []chainjson.HexBytes) {
+	for _, data := range datawit{
+		sw := dataWitness(data)
+		si.WitnessComponents = append(si.WitnessComponents, sw)
+	}
+}
+
 // SigningInstruction gives directions for signing inputs in a TxTemplate.
 type SigningInstruction struct {
 	Position          uint32             `json:"position"`

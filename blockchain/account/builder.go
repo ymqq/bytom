@@ -142,7 +142,8 @@ func (a *spendUTXOAction) Build(ctx context.Context, b *txbuilder.TemplateBuilde
 	}
 	fmt.Println("(spendUTXOAction)Build AccountID:", acct.ID)
 
-	txInput, sigInst, err := RawUtxoToInputs(ctx, acct, res.UTXOs[0], a.ReferenceData)
+	//txInput, sigInst, err := RawUtxoToInputs(ctx, acct, res.UTXOs[0], a.ReferenceData)
+	txInput, sigInst, err := utxoToInputs(ctx, acct, res.UTXOs[0], a.ReferenceData)
 	if err != nil {
 		return err
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/bytom/protocol/bc/legacy"
 
 	log "github.com/sirupsen/logrus"
+	"fmt"
 )
 
 var (
@@ -43,6 +44,7 @@ func Build(ctx context.Context, tx *legacy.TxData, actions []Action, maxTime tim
 
 		log.WithFields(log.Fields{"action": action, "error": err}).Info("Loop tx's action")
 		if err != nil {
+			fmt.Println("error action:", action, "err:", err)
 			err = errors.WithData(err, "index", i)
 			errs = append(errs, err)
 		}

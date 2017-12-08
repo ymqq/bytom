@@ -7,6 +7,7 @@ import (
 	"github.com/bytom/crypto/ed25519/chainkd"
 	chainjson "github.com/bytom/encoding/json"
 	"github.com/bytom/errors"
+	"fmt"
 )
 
 // TODO(bobg): most of the code here is duplicated from
@@ -41,7 +42,7 @@ func (sw *RawTxSigWitness) sign(ctx context.Context, tpl *Template, index uint32
 				break
 			}
 		}
-		if !found {
+		if xpubs != nil && !found {
 			continue
 		}
 		path := make([]([]byte), len(keyID.DerivationPath))
@@ -59,6 +60,7 @@ func (sw *RawTxSigWitness) sign(ctx context.Context, tpl *Template, index uint32
 
 func (sw RawTxSigWitness) materialize(args *[][]byte) error {
 	var nsigs int
+	fmt.Println("sw.Quorum:", sw.Quorum)
 	for i := 0; i < len(sw.Sigs) && nsigs < sw.Quorum; i++ {
 		if len(sw.Sigs[i]) > 0 {
 			*args = append(*args, sw.Sigs[i])

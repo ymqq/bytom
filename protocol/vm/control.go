@@ -2,6 +2,7 @@ package vm
 
 import (
 	"encoding/binary"
+	"fmt"
 )
 
 func opVerify(vm *virtualMachine) error {
@@ -99,6 +100,7 @@ func opJumpIf(vm *virtualMachine) error {
 	}
 	if AsBool(p) {
 		address := binary.LittleEndian.Uint32(vm.data)
+		fmt.Println("jumpif address:", address)
 		vm.nextPC = address
 	}
 	return nil

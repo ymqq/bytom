@@ -7,6 +7,8 @@ import (
 	"github.com/bytom/errors"
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/vm"
+	"fmt"
+	"encoding/hex"
 )
 
 // NewTxVMContext generates the vm.Context for BVM
@@ -120,8 +122,20 @@ type entryContext struct {
 }
 
 func (ec *entryContext) checkOutput(index uint64, data []byte, amount uint64, assetID []byte, vmVersion uint64, code []byte, expansion bool) (bool, error) {
+	fmt.Println("vmVersion:", vmVersion)
+	fmt.Println("code:", hex.EncodeToString(code))
+	fmt.Println("assetID:", hex.EncodeToString(assetID))
+	fmt.Println("amount:", amount)
+	fmt.Println("data:", hex.EncodeToString(data))
+
 	checkEntry := func(e bc.Entry) (bool, error) {
 		check := func(prog *bc.Program, value *bc.AssetAmount, dataHash *bc.Hash) bool {
+			fmt.Println("checkEntry vmVersion:", prog.VmVersion)
+			fmt.Println("checkEntry code:", hex.EncodeToString(prog.Code))
+			fmt.Println("checkEntry assetID:", value.AssetId.String())
+			fmt.Println("checkEntry amount:", value.Amount)
+			fmt.Println("checkEntry data:", hex.EncodeToString(dataHash.Bytes()))
+
 			return (prog.VmVersion == vmVersion &&
 				bytes.Equal(prog.Code, code) &&
 				bytes.Equal(value.AssetId.Bytes(), assetID) &&
