@@ -34,7 +34,13 @@ func main() {
 			fmt.Println("args: [pubkey]\n\n")
 			os.Exit(0)
 		}
+
 		pubkey := os.Args[2]
+		if CheckLength(pubkey) == false {
+			fmt.Println("the length of pubkey is not equal 32\n")
+			os.Exit(0)
+		}
+
 		pubkeyvalue, _ := hex.DecodeString(pubkey)
 
 		out, _ := instance.PayToLockWithPublicKey(pubkeyvalue)
@@ -55,6 +61,11 @@ func main() {
 		pubkey1 := os.Args[2]
 		pubkey2 := os.Args[3]
 		pubkey3 := os.Args[4]
+		if CheckLength(pubkey1) == false || CheckLength(pubkey2) == false || CheckLength(pubkey3) == false {
+			fmt.Println("the length of pubkey is not equal 32\n")
+			os.Exit(0)
+		}
+
 		pub1, _:= hex.DecodeString(pubkey1)
 		pub2, _:= hex.DecodeString(pubkey2)
 		pub3, _:= hex.DecodeString(pubkey3)
@@ -75,6 +86,11 @@ func main() {
 			os.Exit(0)
 		}
 		pubkeyhash := os.Args[2]
+		if CheckLength(pubkeyhash) == false {
+			fmt.Println("the length of pubKeyHash is not equal 32\n")
+			os.Exit(0)
+		}
+
 		hashvalue, _:= hex.DecodeString(pubkeyhash)
 
 		out, _ := instance.PayToLockWithPublicKeyHash(hashvalue)
@@ -96,6 +112,10 @@ func main() {
 		amountRequested := os.Args[3]
 		seller := os.Args[4]
 		pubkey := os.Args[5]
+		if CheckLength(assetRequested) == false || CheckLength(pubkey) == false {
+			fmt.Println("the length of assetid or pubkey is not equal 32\n")
+			os.Exit(0)
+		}
 
 		asset, _:= hex.DecodeString(assetRequested)
 		copy(tmp[:], asset[:32])
@@ -124,6 +144,10 @@ func main() {
 		pubkey := os.Args[2]
 		sender := os.Args[3]
 		recipient := os.Args[4]
+		if CheckLength(pubkey) == false {
+			fmt.Println("the length of pubkey is not equal 32\n")
+			os.Exit(0)
+		}
 
 		pub, _:= hex.DecodeString(pubkey)
 		send, _:= hex.DecodeString(sender)
@@ -149,6 +173,10 @@ func main() {
 		seller := os.Args[4]
 		buyerKey := os.Args[5]
 		deadline := os.Args[6]
+		if CheckLength(strikeCurrency) == false || CheckLength(buyerKey) == false {
+			fmt.Println("the length of assetid or pubkey is not equal 32\n")
+			os.Exit(0)
+		}
 
 		asset, _:= hex.DecodeString(strikeCurrency)
 		copy(tmp[:], asset[:32])
@@ -183,6 +211,10 @@ func main() {
 		repaymentDue := os.Args[4]
 		lender := os.Args[5]
 		borrower := os.Args[6]
+		if CheckLength(assetLoaned) == false {
+			fmt.Println("the length of assetid is not equal 32\n")
+			os.Exit(0)
+		}
 
 		asset, _:= hex.DecodeString(assetLoaned)
 		copy(tmp[:], asset[:32])
@@ -213,6 +245,11 @@ func main() {
 			os.Exit(0)
 		}
 		hash := os.Args[2]
+		if CheckLength(hash) == false {
+			fmt.Println("the length of hash is not equal 32\n")
+			os.Exit(0)
+		}
+
 		hashvalue, _:= hex.DecodeString(hash)
 
 		out, _ := instance.PayToRevealPreimage(hashvalue)
@@ -220,6 +257,38 @@ func main() {
 
 		//check the program
 		_, err := instance.ParsePayToRevealPreimage(out)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
+	case "PriceChanger":
+		if(len(os.Args) != 6) {
+			fmt.Println("args: [amount] [assetid] [pubkey] [seller]\n\n")
+			os.Exit(0)
+		}
+		askAmount := os.Args[2]
+		askAsset := os.Args[3]
+		sellerKey := os.Args[4]
+		sellerProg := os.Args[5]
+		if CheckLength(askAsset) == false || CheckLength(sellerKey) == false {
+			fmt.Println("the length of assetid or pubkey is not equal 32\n")
+			os.Exit(0)
+		}
+
+		asset, _:= hex.DecodeString(askAsset)
+		copy(tmp[:], asset[:32])
+		assetid := bc.NewAssetID(tmp)
+
+		amount, _:= strconv.ParseUint(askAmount, 10, 64)
+		pubkey, _:= hex.DecodeString(sellerKey)
+		seller, _:= hex.DecodeString(sellerProg)
+
+		out, _ := instance.PayToPriceChanger(amount, assetid, pubkey, seller)
+		result = hex.EncodeToString(out)
+
+		//check the program
+		_, err := instance.ParsePayToPriceChanger(out)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(0)
@@ -244,5 +313,15 @@ func help(w io.Writer) {
 	fmt.Fprintln(w, "\t CallOption")
 	fmt.Fprintln(w, "\t LoanCollateral")
 	fmt.Fprintln(w, "\t RevealPreimage")
+	fmt.Fprintln(w, "\t PriceChanger")
 	fmt.Fprintln(w)
+}
+
+func CheckLength(str string) bool {
+	length := len(str)
+	if length == 64 { //the length of 32-bytes string is 64, because of a byte compose with two charactor
+		return true
+	} else {
+		return false
+	}
 }

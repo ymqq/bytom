@@ -89,7 +89,7 @@ func main() {
 				fmt.Fprintf(buf, "\t_%s := int64(%s)\n", param.Name, param.Name)
 				fmt.Fprintf(buf, "\t_contractArgs = append(_contractArgs, compiler.ContractArg{I: &_%s})\n", param.Name)
 			case "Asset":
-				fmt.Fprintf(buf, "\t_%s := %s[:]\n", param.Name, param.Name)
+				fmt.Fprintf(buf, "\t_%s := %s.Bytes()\n", param.Name, param.Name)
 				fmt.Fprintf(buf, "\t_contractArgs = append(_contractArgs, compiler.ContractArg{S: (*json.HexBytes)(&_%s)})\n", param.Name)
 			case "Boolean":
 				fmt.Fprintf(buf, "\t_contractArgs = append(_contractArgs, compiler.ContractArg{B: &%s})\n", param.Name)
