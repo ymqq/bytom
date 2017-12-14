@@ -77,6 +77,7 @@ func (a *BlockchainReactor) pseudohsmSignTemplates(ctx context.Context, x struct
 
 func (a *BlockchainReactor) pseudohsmSignTemplate(ctx context.Context, xpub chainkd.XPub, path [][]byte, data [32]byte, password string) ([]byte, error) {
 	fmt.Println("path:", path)
+	fmt.Println("data:", hex.EncodeToString(data[:]))
 	sigBytes, err := a.hsm.XSign(xpub, path, data[:], password)
 	if err == pseudohsm.ErrNoKey {
 		return nil, nil

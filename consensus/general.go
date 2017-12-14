@@ -9,7 +9,7 @@ import (
 //consensus variables
 const (
 	// define the Max transaction size and Max block size
-	MaxTxSize    = uint64(1024)
+	MaxTxSize    = uint64(10240)
 	MaxBlockSzie = uint64(16384)
 
 	//config parameter for coinbase reward

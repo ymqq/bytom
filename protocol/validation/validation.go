@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	defaultGasLimit = int64(80000)
+	defaultGasLimit = int64(8000)
 	muxGasCost      = int64(100000000000)
 	// GasRate indicates the current gas rate
 	GasRate = int64(1000)
@@ -616,6 +616,7 @@ func validateBlockAgainstPrev(b, prev *bc.Block) error {
 // ValidateTx validates a transaction.
 func ValidateTx(tx *bc.Tx, block *bc.Block) (uint64, error) {
 	if tx.TxHeader.SerializedSize > consensus.MaxTxSize {
+		fmt.Println("tx.TxHeader.SerializedSize:", tx.TxHeader.SerializedSize)
 		return 0, errWrongTransactionSize
 	}
 
