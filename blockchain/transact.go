@@ -137,26 +137,6 @@ func (a *BlockchainReactor) submitSingle(ctx context.Context, tpl *txbuilder.Tem
 		return nil, errors.Wrapf(err, "tx %s", tpl.Transaction.ID.String())
 	}
 
-	/*
-	for j, resID := range tpl.Transaction.ResultIds {
-		resultEntry := tpl.Transaction.Tx.Entries[*resID]
-		switch e := resultEntry.(type) {
-			case *bc.Output:
-				fmt.Println("j:", j, "resultEntry:", reflect.TypeOf(e))
-				fmt.Println("e.Source.Ref:", e.Source.Ref.String())
-				fmt.Println("e.Source.Value.AssetId:", e.Source.Value.AssetId.String())
-				fmt.Println("e.Source.Value.Amount:", e.Source.Value.Amount)
-				fmt.Println("e.Source.Position:", e.Source.Position)
-				fmt.Println("e.ControlProgram.VmVersion:", e.ControlProgram.VmVersion)
-				fmt.Println("e.ControlProgram.Code:", hex.EncodeToString(e.ControlProgram.Code))
-				fmt.Println("e.Data:", e.Data.String())
-				fmt.Println("e.ExtHash:", e.ExtHash.String())
-				fmt.Println("e.Ordinal:", e.Ordinal)
-			default:
-				fmt.Println("j:", j, "resultEntry:", reflect.TypeOf(e), "  ", resultEntry.String())
-		}
-	}
-	*/
 	return map[string]string{"id": tpl.Transaction.ID.String()}, nil
 }
 

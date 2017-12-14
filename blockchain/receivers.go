@@ -8,7 +8,6 @@ import (
 	"github.com/bytom/crypto/ed25519/chainkd"
 	chainjson "github.com/bytom/encoding/json"
 	"github.com/bytom/net/http/reqid"
-	"fmt"
 )
 
 type (
@@ -25,8 +24,6 @@ type (
 
 // POST /create-account-pubkey
 func (a *BlockchainReactor) createAccountPubkey(ctx context.Context, req createAccountPubkeyRequest) (createAccountPubkeyResponse) {
-	fmt.Println("===========================================================")
-	fmt.Println("createAccountPubkeyRequest:", req.AccountID)
 	root, pubkey, path, err := a.accounts.CreatePubkey(ctx, req.AccountID, req.AccountAlias)
 	if err != nil {
 		return createAccountPubkeyResponse{}

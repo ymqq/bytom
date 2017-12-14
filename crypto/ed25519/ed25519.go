@@ -181,7 +181,6 @@ func Verify(publicKey PublicKey, message, sig []byte) bool {
 	var R edwards25519.ProjectiveGroupElement
 	var b [32]byte
 	copy(b[:], sig[32:])
-
 	edwards25519.GeDoubleScalarMultVartime(&R, &hReduced, &A, &b)
 
 	var checkR [32]byte
@@ -191,6 +190,4 @@ func Verify(publicKey PublicKey, message, sig []byte) bool {
 	fmt.Println("compare R:", hex.EncodeToString(checkR[:]))
 
 	return subtle.ConstantTimeCompare(sig[:32], checkR[:]) == 1
-	//_ = subtle.ConstantTimeCompare(sig[:32], checkR[:])
-	//return true
 }

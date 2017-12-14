@@ -20,7 +20,6 @@ import (
 	"github.com/bytom/errors"
 	"github.com/bytom/protocol"
 	"github.com/bytom/protocol/vm/vmutil"
-	"encoding/hex"
 	"strconv"
 )
 
@@ -225,12 +224,10 @@ func (m *Manager) createPubkey(ctx context.Context, accountID string) (rootXPub 
 		return
 	}
 
-	fmt.Println("account.KeyIndex:", account.KeyIndex)
 	idx, err := m.nextIndex(ctx)
 	if err != nil {
 		return
 	}
-	fmt.Println("createPubkey idx:", idx)
 
 	rootXPub = account.XPubs[0]
 	path = signers.Path(account, signers.AccountKeySpace, idx)
@@ -256,19 +253,6 @@ func (m *Manager) createControlProgram(ctx context.Context, accountID string, ch
 	control, err := vmutil.P2SPMultiSigProgram(derivedPKs, account.Quorum)
 	if err != nil {
 		return nil, err
-	}
-	fmt.Println("account.KeyIndex:", account.KeyIndex)
-	fmt.Println("Manager.acpIndexNext(controlProgram.KeyIndex):", idx)
-	fmt.Println("derivedPKs(account.KeyIndex + idx + account.XPubs)):", hex.EncodeToString(derivedPKs[0]))
-	fmt.Println("path:", path)
-	for i, xpubs := range account.XPubs {
-		fmt.Println("i:", i, "xpubs:", xpubs)
-	}
-	for i, derivedxpubs := range derivedXPubs {
-		fmt.Println("i:", i, "derivedxpubs:", derivedxpubs)
-	}
-	for i, derivedpks := range derivedPKs {
-		fmt.Println("i:", i, "derivedpks:", derivedpks)
 	}
 
 	return &controlProgram{
@@ -302,54 +286,8 @@ func (m *Manager) CreateContractProgram(ctx context.Context, accountID string, c
 		return nil, err
 	}
 
-	/*
-	idx, err := m.nextIndex(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	//var idx uint64
-	//idx = 0
-	path := signers.Path(account, signers.AccountKeySpace, idx)
-	derivedXPubs := chainkd.DeriveXPubs(account.XPubs, path)
-	derivedPKs := chainkd.XPubKeys(derivedXPubs)
-
-	fmt.Println("account.KeyIndex:", account.KeyIndex)
-	fmt.Println("Manager.acpIndexNext(controlProgram.KeyIndex):", idx)
-	fmt.Println("path:", path)
-	for i, xpubs := range account.XPubs {
-		fmt.Println("i:", i, "xpubs:", xpubs)
-	}
-	for i, derivedxpubs := range derivedXPubs {
-		fmt.Println("i:", i, "derivedxpubs:", derivedxpubs)
-	}
-	for i, derivedpks := range derivedPKs {
-		fmt.Println("i:", i, "derivedpks:", derivedpks)
-	}
-
-	control_program, err := vmutil.SigPubProgram(derivedPKs)
-	fmt.Println("control_program:", hex.EncodeToString(control_program))
-
-	var contract string
-	//if the contract is LockWithPublicKey, need to add prefix instruction OP_SHA3 OP_SETTXSIGHASH (aace)
-	if hex.EncodeToString(control) == "7403ae7cac00c0" || hex.EncodeToString(control) == "ae7cac" {
-		contract = "aace" + hex.EncodeToString(control_program) + hex.EncodeToString(control)
-	} else {
-		contract = hex.EncodeToString(control_program) + hex.EncodeToString(control)
-	}
-
-	ctl_program, err := hex.DecodeString(contract)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println("contract control_program:", hex.EncodeToString(ctl_program))
-
 	var idx uint64
-	idx = 0
-	*/
-
-	var idx uint64
-	if index == ""{
+	if index == "" {
 		idx, err = m.nextIndex(ctx)
 		if err != nil {
 			return nil, err
@@ -360,10 +298,6 @@ func (m *Manager) CreateContractProgram(ctx context.Context, accountID string, c
 			return nil, err
 		}
 	}
-
-	fmt.Println("account.KeyIndex:", account.KeyIndex)
-	fmt.Println("idx:", idx)
-	fmt.Println("contract control_program:", hex.EncodeToString(control))
 
 	cp := &controlProgram{
 		AccountID:      account.ID,
@@ -378,7 +312,6 @@ func (m *Manager) CreateContractProgram(ctx context.Context, accountID string, c
 	}
 	return cp.ControlProgram, nil
 }
-
 
 type controlProgram struct {
 	AccountID      string
