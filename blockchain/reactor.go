@@ -166,6 +166,7 @@ func (bcr *BlockchainReactor) BuildHander() {
 	m.Handle("/", alwaysError(errors.New("not Found")))
 	m.Handle("/info", jsonHandler(bcr.info))
 	m.Handle("/submit-transaction", jsonHandler(bcr.submit))
+	m.Handle("/calculate-gas", jsonHandler(bcr.calculateGas))
 	m.Handle("/create-access-token", jsonHandler(bcr.createAccessToken))
 	m.Handle("/list-access-token", jsonHandler(bcr.listAccessTokens))
 	m.Handle("/delete-access-token", jsonHandler(bcr.deleteAccessToken))

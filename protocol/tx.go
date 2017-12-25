@@ -53,3 +53,23 @@ func (c *Chain) checkIssuanceWindow(tx *bc.Tx) error {
 	}
 	return nil
 }
+
+//get the used gas for program
+func (c *Chain) GetUsedGas(tx *legacy.Tx) (uint64, error) {
+	newTx := tx.Tx
+
+	oldBlock, err := c.GetBlockByHash(c.state.hash)
+	if err != nil {
+		return 0, err
+	}
+	block := legacy.MapBlock(oldBlock)
+	usedgas, err := validation.GetTxUsedGas(newTx, block)
+
+	if err != nil {
+		c.txPool.AddErrCache(&newTx.ID, err)
+		return 0, err
+	}
+	fmt.Println("after program run in the virtual Machine, UsedGas:", usedgas)
+
+	return usedgas, errors.Sub(ErrBadTx, err)
+}

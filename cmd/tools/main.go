@@ -64,6 +64,7 @@ var commands = map[string]*command{
 	"create-account-receiver":  {createAccountReceiver},
 	"sign-transactions":        {signTransactions},
 	"list-transactions":        {listTransactions},
+	"get-gas":        			{GetLockGas},
 }
 
 func main() {
@@ -1503,4 +1504,57 @@ func unlockPriceChanger(client *rpc.Client, args []string) {
 		fmt.Printf("clause must in set:[%v, %v, %v]\n", trade, cancel, ending)
 		os.Exit(1)
 	}
+}
+
+func GetLockGas(client *rpc.Client, args []string) {
+	if len(args) != 5 {
+		fatalln("error: need args: [account id] [asset id] [password] [spend amount] [control_program] \n")
+	}
+
+	// Build Transaction.
+	fmt.Printf("To build transaction:\n")
+
+
+	buildReqFmt := `
+		{"actions": [
+			{"type": "spend_account", "asset_id": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "amount":20000000, "account_id": "%s"},
+			{"type": "spend_account", "asset_id": "%s", "amount": %s, "account_id": "%s"},
+			{"type": "control_program", "asset_id": "%s", "amount": %s, "control_program": "%v", "reference_data": {}}
+		]}`
+
+	buildReqStr := fmt.Sprintf(buildReqFmt, args[0], args[1], args[3], args[0], args[1], args[3], args[4])
+
+	/*
+	//expires_at := time.Time()
+	buildReqFmt := `
+		{"actions": [
+			{"type": "spend_account", "asset_id": "%s", "amount": %s, "account_id": "%s"},
+			{"type": "control_receiver", "asset_id": "%s", "amount": %s, "receiver":{"control_program": "%v"}, "reference_data": {}}
+		]}`
+	buildReqStr := fmt.Sprintf(buildReqFmt, args[1], args[3], args[4], args[1], args[3], args[5])
+	*/
+
+	var buildReq blockchain.BuildRequest
+	err := stdjson.Unmarshal([]byte(buildReqStr), &buildReq)
+	if err != nil {
+		fmt.Printf("json Unmarshal error.")
+		os.Exit(1)
+	}
+	fmt.Println("buildReq:", buildReq)
+
+	//generate the txbuilder template
+	tpl := make([]txbuilder.Template, 1)
+	client.Call(context.Background(), "/build-transaction", []*blockchain.BuildRequest{&buildReq}, &tpl)
+	marshalTpl, _ := stdjson.Marshal(tpl[0])
+	fmt.Printf("tpl:%v\n", string(marshalTpl))
+
+	// sign transaction
+	signResp := sign(client, tpl, args[2])
+	fmt.Printf("sign tpl:%v\n", tpl[0])
+
+	// calculate gas
+	var Response interface{}
+	submitArg := blockchain.SubmitArg{Transactions: signResp, Wait: json.Duration{Duration: time.Duration(1000000)}, WaitUntil: "none"}
+	client.Call(context.Background(), "/calculate-gas", submitArg, &Response)
+	fmt.Printf("calculated gas:%v\n", Response)
 }

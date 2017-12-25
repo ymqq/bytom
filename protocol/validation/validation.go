@@ -634,3 +634,25 @@ func ValidateTx(tx *bc.Tx, block *bc.Block) (uint64, error) {
 	err := checkValid(vs, tx.TxHeader)
 	return uint64(vs.gas.BTMValue), err
 }
+
+// get Transaction used gas
+func GetTxUsedGas(tx *bc.Tx, block *bc.Block) (uint64, error) {
+	if tx.TxHeader.SerializedSize > consensus.MaxTxSize {
+		fmt.Println("tx.TxHeader.SerializedSize:", tx.TxHeader.SerializedSize)
+		return 0, errWrongTransactionSize
+	}
+
+	//TODO: handle the gas limit
+	vs := &validationState{
+		block:   block,
+		tx:      tx,
+		entryID: tx.ID,
+		gas: &gasState{
+			gasLeft: defaultGasLimit,
+		},
+		cache: make(map[bc.Hash]error),
+	}
+
+	err := checkValid(vs, tx.TxHeader)
+	return uint64(vs.gas.gasUsed), err
+}
