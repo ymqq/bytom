@@ -21,8 +21,10 @@ import (
 	"github.com/bytom/env"
 	"github.com/bytom/errors"
 	chainjson "github.com/bytom/encoding/json"
+	"github.com/bytom/protocol/vm"
 	"encoding/hex"
 	"encoding/binary"
+	"strconv"
 )
 
 // config vars
@@ -1332,18 +1334,114 @@ func signTransactions(client *rpc.Client, args []string) {
 //unlock contract of PriceChanger
 func unlockPriceChanger(client *rpc.Client, args []string) {
 	if len(args) < 6 {
-		fatalln("error: need args: [output id] [out account id] [asset id] [password] [amount] [client_token]" +
-			" [clause selector] ([new amount] [new asset id] [root_pubkey] [path1] [path2] ) " +
+		fatalln("error: need args: [output id] [(control_program) | (out account id)] [asset id] [password] [amount] [client_token]" +
+			" [clause selector] ([new amount] [new asset id] [root_pubkey] [path1] [path2] " +
 			" | ([inner asset id] [inner amount] [inner account id] [recv control_program] )\n")
 	}
 
-	//the clause of TradeOffer
-	trade := "00000000"
-	cancel := "13000000"
-	ending := "1a000000"
+	//the clause of PriceChanger
+	changePrice := "00000000"
+	redeem := "33000000"
+	ending := "3d000000"
 
 	fmt.Println("clause selector:", args[6])
-	if args[6] == trade {	//select clasue trade
+	if args[6] == changePrice {	//select clasue changePrice
+		// Build Transaction.
+		fmt.Printf("To build transaction:\n")
+		buildReqFmt := `
+		{"actions": [
+			{"type":"spend_account_unspent_output", "output_id":"%s", "reference_data":{}, "client_token":"%s"},
+			{"type": "control_program", "asset_id": "%s", "amount": %s, "control_program": "%v", "reference_data":{}}
+		]}`
+		buildReqStr := fmt.Sprintf(buildReqFmt, args[0], args[5], args[2], args[4], args[1])
+		var buildReq blockchain.BuildRequest
+		err := stdjson.Unmarshal([]byte(buildReqStr), &buildReq)
+		if err != nil {
+			fmt.Println("json Unmarshal error. ", err)
+			os.Exit(1)
+		}
+
+		tpl := make([]txbuilder.Template, 1)
+		client.Call(context.Background(), "/build-transaction", []*blockchain.BuildRequest{&buildReq}, &tpl)
+		marshalTpl, _ := stdjson.Marshal(tpl[0])
+		if tpl[0].Transaction == nil {
+			fmt.Printf("tpl:%v\n", string(marshalTpl))
+			fmt.Printf("build transaction error.\n")
+			os.Exit(1)
+		}
+		fmt.Printf("tpl:%v\n", string(marshalTpl))
+
+		//get clause paramenter
+		var root chainkd.XPub
+		pub , _:= hex.DecodeString(args[9])
+		copy(root[:], pub[:])
+
+		var path []chainjson.HexBytes
+		path1, _ := hex.DecodeString(args[10])
+		path2, _ := hex.DecodeString(args[11])
+		path = append(path, path1)
+		path = append(path, path2)
+
+		fmt.Printf("createPubKey.Root:%v\n", root)
+		fmt.Printf("createPubKey.Path:%v\n", path)
+
+		var totalroot []chainkd.XPub
+		var totalpath [][]chainjson.HexBytes
+		totalroot = append(totalroot, root)
+		totalpath = append(totalpath, path)
+
+		//add clause paramenter into program
+		var si txbuilder.SigningInstruction
+
+		//add newAmount and newAsset (DataWitness)
+		var newdata []chainjson.HexBytes
+		amount, err := strconv.ParseInt(args[7], 10, 64)
+		newAmount := vm.Int64Bytes(amount)
+		newdata = append(newdata, newAmount)
+		newAsset, _ := hex.DecodeString(args[8])
+		newdata = append(newdata, newAsset)
+		si.AddDataWitness(newdata)
+
+		//add rootpubkey and path (RawTxSigWitness)
+		err = si.AddRawTxSigWitness(totalroot, totalpath, 1)
+		if err != nil {
+			fmt.Printf("AddRawTxSigWitness return error.")
+			os.Exit(1)
+		}
+
+		//add clause selector (DataWitness)
+		var data []chainjson.HexBytes
+		tmp, _ := hex.DecodeString(args[6])
+		data = append(data, tmp)
+		si.AddDataWitness(data)
+
+		for i, inp := range tpl[0].Transaction.InputIDs{
+			fmt.Printf("tpl[0].Transaction.InputIDs[%d]:%v\n", i, inp)
+		}
+
+		length := len(tpl[0].SigningInstructions)
+		if length <= 0 {
+			length = 1
+			tpl[0].SigningInstructions = append(tpl[0].SigningInstructions, &si)
+			tpl[0].SigningInstructions[length - 1].Position = 0
+		} else {
+			tpl[0].SigningInstructions[0] = &si
+		}
+		fmt.Println("length of tpl[0].SigningInstructions:", length)
+		for i, _ := range tpl[0].SigningInstructions{
+			fmt.Printf("tpl[0].SigningInstructions[%d].postion:%v\n", i, tpl[0].SigningInstructions[i].Position)
+		}
+		// sign transaction
+		signResp := sign(client, tpl, args[3])
+		fmt.Printf("sign tpl:%v\n", tpl[0])
+
+		// submit-transaction-Spend_account
+		var submitResponse interface{}
+		submitArg := blockchain.SubmitArg{Transactions: signResp, Wait: json.Duration{Duration: time.Duration(1000000)}, WaitUntil: "none"}
+		client.Call(context.Background(), "/submit-transaction", submitArg, &submitResponse)
+		fmt.Printf("submit transaction:%v\n", submitResponse)
+
+	} else if args[6] == redeem {	//select clasue redeem
 		// Build Transaction.
 		// notice the action order: out_spend - inner_ctl - inner_spend - out_ctl
 		fmt.Printf("To build transaction:\n")
@@ -1413,95 +1511,12 @@ func unlockPriceChanger(client *rpc.Client, args []string) {
 		client.Call(context.Background(), "/submit-transaction", submitArg, &submitResponse)
 		fmt.Printf("submit transaction:%v\n", submitResponse)
 
-	} else if args[6] == cancel {	//select clasue cancel
-		// Build Transaction.
-		fmt.Printf("To build transaction:\n")
-		buildReqFmt := `
-		{"actions": [
-			{"type":"spend_account_unspent_output", "output_id":"%s", "reference_data":{}, "client_token":"%s"},
-			{"type": "control_account", "asset_id": "%s", "amount": %s, "account_id": "%s", "reference_data":{}}
-		]}`
-		buildReqStr := fmt.Sprintf(buildReqFmt, args[0], args[5], args[2], args[4], args[1])
-		var buildReq blockchain.BuildRequest
-		err := stdjson.Unmarshal([]byte(buildReqStr), &buildReq)
-		if err != nil {
-			fmt.Printf("json Unmarshal error.")
-			os.Exit(1)
-		}
-
-		tpl := make([]txbuilder.Template, 1)
-		client.Call(context.Background(), "/build-transaction", []*blockchain.BuildRequest{&buildReq}, &tpl)
-		marshalTpl, _ := stdjson.Marshal(tpl[0])
-		if tpl[0].Transaction == nil {
-			fmt.Printf("tpl:%v\n", string(marshalTpl))
-			fmt.Printf("build transaction error.\n")
-			os.Exit(1)
-		}
-		fmt.Printf("tpl:%v\n", string(marshalTpl))
-
-		//get clause paramenter
-		var root chainkd.XPub
-		pub , _:= hex.DecodeString(args[7])
-		copy(root[:], pub[:])
-
-		var path []chainjson.HexBytes
-		path1, _ := hex.DecodeString(args[8])
-		path2, _ := hex.DecodeString(args[9])
-		path = append(path, path1)
-		path = append(path, path2)
-
-		fmt.Printf("createPubKey.Root:%v\n", root)
-		fmt.Printf("createPubKey.Path:%v\n", path)
-
-		var totalroot []chainkd.XPub
-		var totalpath [][]chainjson.HexBytes
-		totalroot = append(totalroot, root)
-		totalpath = append(totalpath, path)
-
-		//add rootpubkey and path
-		var si txbuilder.SigningInstruction
-		err = si.AddRawTxSigWitness(totalroot, totalpath, 1)
-		if err != nil {
-			fmt.Printf("AddRawTxSigWitness return error.")
-			os.Exit(1)
-		}
-
-		//add clause selector
-		var data []chainjson.HexBytes
-		tmp, _ := hex.DecodeString(args[6])
-		data = append(data, tmp)
-		si.AddDataWitness(data)
-
-		for i, inp := range tpl[0].Transaction.InputIDs{
-			fmt.Printf("tpl[0].Transaction.InputIDs[%d]:%v\n", i, inp)
-		}
-
-		length := len(tpl[0].SigningInstructions)
-		if length <= 0 {
-			length = 1
-			tpl[0].SigningInstructions = append(tpl[0].SigningInstructions, &si)
-			tpl[0].SigningInstructions[length - 1].Position = 0
-		} else {
-			tpl[0].SigningInstructions[length-1] = &si
-		}
-		fmt.Println("length of tpl[0].SigningInstructions:", length)
-		fmt.Println("tpl[0].SigningInstructions[length - 1].postion:", tpl[0].SigningInstructions[length - 1].Position)
-
-		// sign transaction
-		signResp := sign(client, tpl, args[3])
-		fmt.Printf("sign tpl:%v\n", tpl[0])
-
-		// submit-transaction-Spend_account
-		var submitResponse interface{}
-		submitArg := blockchain.SubmitArg{Transactions: signResp, Wait: json.Duration{Duration: time.Duration(1000000)}, WaitUntil: "none"}
-		client.Call(context.Background(), "/submit-transaction", submitArg, &submitResponse)
-		fmt.Printf("submit transaction:%v\n", submitResponse)
 	} else if args[6] == ending {	//no clause selected, ending exit
 		fmt.Printf("no clause was selected in this program, ending exit!!!\n")
 		os.Exit(0)
 	} else {
 		fmt.Printf("selected clause [%v] error\n", args[6])
-		fmt.Printf("clause must in set:[%v, %v, %v]\n", trade, cancel, ending)
+		fmt.Printf("clause must in set:[%v, %v, %v]\n", changePrice, redeem, ending)
 		os.Exit(1)
 	}
 }

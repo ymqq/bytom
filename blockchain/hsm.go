@@ -80,10 +80,10 @@ func (a *BlockchainReactor) pseudohsmSignTemplate(ctx context.Context, xpub chai
 	fmt.Println("data:", hex.EncodeToString(data[:]))
 	sigBytes, err := a.hsm.XSign(xpub, path, data[:], password)
 	if err == pseudohsm.ErrNoKey {
-		return nil, nil
+		return nil, err
 	}
 	fmt.Println("signature:", hex.EncodeToString(sigBytes))
-	return sigBytes, err
+	return sigBytes, nil
 }
 
 func (a *BlockchainReactor) pseudohsmResetPassword(ctx context.Context, x struct {
