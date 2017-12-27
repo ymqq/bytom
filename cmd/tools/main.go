@@ -1532,22 +1532,11 @@ func GetLockGas(client *rpc.Client, args []string) {
 
 	buildReqFmt := `
 		{"actions": [
-			{"type": "spend_account", "asset_id": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "amount":20000000, "account_id": "%s"},
 			{"type": "spend_account", "asset_id": "%s", "amount": %s, "account_id": "%s"},
 			{"type": "control_program", "asset_id": "%s", "amount": %s, "control_program": "%v", "reference_data": {}}
 		]}`
 
-	buildReqStr := fmt.Sprintf(buildReqFmt, args[0], args[1], args[3], args[0], args[1], args[3], args[4])
-
-	/*
-	//expires_at := time.Time()
-	buildReqFmt := `
-		{"actions": [
-			{"type": "spend_account", "asset_id": "%s", "amount": %s, "account_id": "%s"},
-			{"type": "control_receiver", "asset_id": "%s", "amount": %s, "receiver":{"control_program": "%v"}, "reference_data": {}}
-		]}`
-	buildReqStr := fmt.Sprintf(buildReqFmt, args[1], args[3], args[4], args[1], args[3], args[5])
-	*/
+	buildReqStr := fmt.Sprintf(buildReqFmt, args[1], args[3], args[0], args[1], args[3], args[4])
 
 	var buildReq blockchain.BuildRequest
 	err := stdjson.Unmarshal([]byte(buildReqStr), &buildReq)
