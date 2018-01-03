@@ -48,6 +48,11 @@ func parse(buf []byte) (contracts []*Contract, err error) {
 
 func parseContracts(p *parser) []*Contract {
 	var result []*Contract
+	contracts := parseContractImport(p)
+	for _, c := range contracts {
+		result = append(result, c)
+	}
+
 	for peekKeyword(p) == "contract" {
 		contract := parseContract(p)
 		result = append(result, contract)
