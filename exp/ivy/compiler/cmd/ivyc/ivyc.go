@@ -2,12 +2,11 @@ package main
 
 import (
 	"bytes"
-	"flag"
 	"fmt"
 	"log"
 	"os"
 	"strings"
-
+	"bufio"
 	"github.com/bytom/exp/ivy/compiler"
 )
 
@@ -17,12 +16,57 @@ const (
 )
 
 func main() {
+	/*
 	packageName := flag.String("package", "main", "Go package name for generated file")
 	flag.Parse()
 
 	contracts, err := compiler.Compile(os.Stdin)
 	if err != nil {
 		log.Fatal(err)
+	}
+	*/
+
+	if len(os.Args) != 2 {
+		fmt.Println("command args: [command] [contract file_path]")
+		fmt.Println("\n")
+		os.Exit(0)
+	}
+
+	filename := os.Args[1]
+	inputFile, inputError := os.Open(filename)
+	if inputError != nil {
+		fmt.Printf("An error occurred on opening the inputfile\n" +
+			"Does the file exist?\n" +
+			"Have you got acces to it?\n")
+		os.Exit(0)
+	}
+	defer inputFile.Close()
+
+	inputReader := bufio.NewReader(inputFile)
+	contracts, err := compiler.Compile(inputReader)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var packageName *string
+	var midstr string
+	var outstr []string
+
+	//change the windows path into unix path
+	filename = strings.Replace(filename, "\\", "/", -1)
+	if strings.Contains(filename, "/") == true {
+		outstr = strings.Split(filename, "/")
+		midstr = outstr[len(outstr)-1]
+	} else {
+		midstr = filename
+	}
+
+	//check whether the filename contains point flag
+	if strings.Contains(midstr, ".") == true {
+		outstr = strings.Split(midstr, ".")
+		packageName = &outstr[0]
+	} else {
+		packageName = &midstr
 	}
 
 	header := new(bytes.Buffer)
@@ -184,7 +228,7 @@ func main() {
 	gopath := os.Getenv("GOPATH")
 	fmt.Println("GOPATH:", gopath)
 	path := gopath + GenerateIvyPath
-	fmt.Println("path:", path)
+	fmt.Println("instance path:", path)
 
 	//if the directory is not exist, create it
 	_, err = os.Stat(path)

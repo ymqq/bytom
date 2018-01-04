@@ -11,15 +11,9 @@ import (
 
 func parsePath(p *parser) []*Contract {
 	path := parseImport(p)
-	if path == nil {
-		panic("parseImport failed")
-	}
-	fmt.Println("path:", string(path))
-
 	filename := absolutePath(string(path))
-	if filename == "" {
-		panic("check absolute path failed")
-	}
+	fmt.Println("import path:", string(path))
+	fmt.Println("absolute import path:", filename)
 
 	inputFile, inputError := os.Open(filename)
 	if inputError != nil {
@@ -51,18 +45,37 @@ func parsePath(p *parser) []*Contract {
 
 func parseImport(p *parser) []byte {
 	consumeKeyword(p, "import")
-	strliteral, newOffset := scanStrLiteral(p.buf, p.pos)
+	strliteral, newOffset := scanImportStr(p.buf, p.pos)
 	if newOffset < 0 {
-		return nil
+		p.errorf("check import string error!")
 	}
 	p.pos = newOffset
 
-	//check the quote for path
-	if strliteral[0] != '\'' || strliteral[len(strliteral) - 1] != '\'' {
-		return nil
-	}
+	//After removing the quotes is the import filepath
 	importPath := strliteral[1 : len(strliteral)-1]
 	return importPath
+}
+
+func scanImportStr(buf []byte, offset int) (bytesLiteral, int) {
+	offset = skipWsAndComments(buf, offset)
+
+	//the talbe of ascii code for double quote and single quote:
+	//  \" -- 0x22/34
+	//  \' -- 0x27/37
+	if offset >= len(buf) || !(buf[offset] == '\'' || buf[offset] == 34) {
+		return bytesLiteral{}, -1
+	}
+
+	for i := offset + 1; i < len(buf); i++ {
+		if (buf[offset] == '\'' && buf[i] == '\'') || (buf[offset] == 34 && buf[i] == 34) {
+			return bytesLiteral(buf[offset : i+1]), i + 1
+		}
+		if buf[i] == '\\' {
+			i++
+		}
+	}
+
+	panic(parseErr(buf, offset, "unterminated import string literal"))
 }
 
 
@@ -80,54 +93,20 @@ func parseContractImport(p *parser) []*Contract {
 func absolutePath(path string) string {
 	fpath, err := filepath.Abs(path)
 	if err != nil {
-		fmt.Println("err:", err)
-		return ""
+		panic(err)
 	}
 	fpath = strings.Replace(fpath, "\\", "/", -1)
 
-	if ok := checkPath(fpath); !ok {
-		fmt.Println("check file path failed")
-		return ""
+	if err := checkPath(fpath); err != nil {
+		panic(err)
 	}
-
 	return fpath
 }
 
 //check whether the path is valid
-func checkPath(path string) bool {
+func checkPath(path string) error {
 	if _, err := os.Stat(path); err != nil {
-		return false
+		return err
 	}
-	return true
-}
-
-/*
-//check whether the contract is valid
-func scanContract(p *parser) error {
-	fmt.Println("right")
 	return nil
 }
-
-//get the current directory
-func getCurrentDirectory(path string) string {
-	dir, err := filepath.Abs(filepath.Dir(path))
-	if err != nil {
-		log.Fatal(err)
-	}
-	return strings.Replace(dir, "\\", "/", -1)
-}
-
-func substr(s string, pos, length int) string {
-	runes := []rune(s)
-	l := pos + length
-	if l > len(runes) {
-		l = len(runes)
-	}
-	return string(runes[pos:l])
-}
-
-//get the parent directory
-func getParentDirectory(dirctory string) string {
-	return substr(dirctory, 0, strings.LastIndex(dirctory, "/"))
-}
-*/
