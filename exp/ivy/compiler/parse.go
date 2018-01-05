@@ -47,6 +47,10 @@ func parse(buf []byte) (contracts []*Contract, err error) {
 // parse functions
 
 func parseContracts(p *parser) []*Contract {
+	if ok := parseVersion(p); !ok {
+		p.errorf("Parse version failed!")
+	}
+
 	var result []*Contract
 	contracts := parseContractImport(p)
 	for _, c := range contracts {

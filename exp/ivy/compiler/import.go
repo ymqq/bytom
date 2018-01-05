@@ -47,7 +47,7 @@ func parseImport(p *parser) []byte {
 	consumeKeyword(p, "import")
 	strliteral, newOffset := scanImportStr(p.buf, p.pos)
 	if newOffset < 0 {
-		p.errorf("check import string error!")
+		p.errorf("Invalid import character format!")
 	}
 	p.pos = newOffset
 
