@@ -411,7 +411,8 @@ func scanIdentifier(buf []byte, offset int) (string, int) {
 	i := offset
 	for ; i < len(buf) && isIDChar(buf[i], i == offset); i++ {
 	}
-	if i == offset {
+	//add the limit for length of identifier, reference standard of C99
+	if i == offset || (i - offset) > 31 {
 		return "", -1
 	}
 	return string(buf[offset:i]), i

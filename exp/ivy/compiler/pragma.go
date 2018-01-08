@@ -5,7 +5,7 @@ import (
 	"github.com/bytom/exp/ivy/compiler/semver"
 )
 
-const IVY_VERSION string = "1.0.0"
+const IVY_VERSION string = "1.9.9"
 
 func parseVersion(p *parser) bool {
 	if peekKeyword(p) == "pragma" {
