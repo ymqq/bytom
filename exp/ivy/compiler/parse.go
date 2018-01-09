@@ -403,6 +403,10 @@ func scanLiteralExpr(buf []byte, offset int) (expression, int) {
 	if newOffset >= 0 {
 		return bytesliteral, newOffset
 	}
+	booleanLiteral, newOffset := scanBoolLiteral(buf, offset) // true or false
+	if newOffset >= 0 {
+		return booleanLiteral, newOffset
+	}
 	return nil, -1
 }
 
@@ -502,6 +506,29 @@ func scanBytesLiteral(buf []byte, offset int) (bytesLiteral, int) {
 		return bytesLiteral{}, -1
 	}
 	return bytesLiteral(decoded), i
+}
+
+func scanBoolLiteral(buf []byte, offset int) (booleanLiteral, int) {
+	offset = skipWsAndComments(buf, offset)
+	if offset >= len(buf) {
+		return false, -1
+	}
+
+	var count int
+	for i := offset; i < len(buf); i++ {
+		if buf[i] == ' ' || buf[i] == '\n' {
+			count = i
+			break
+		}
+	}
+
+	if (count - offset) == 4 && string(buf[offset : count]) == "true" {
+		return true, count
+	} else if (count - offset) == 5 && string(buf[offset : count]) == "false" {
+		return false, count
+	}
+
+	return false, -1
 }
 
 func skipWsAndComments(buf []byte, offset int) int {
