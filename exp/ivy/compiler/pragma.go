@@ -49,16 +49,12 @@ func checkVersion(version string) bool {
 
 func scanVersionStr(buf []byte, offset int) ([]byte, int) {
 	offset = skipWsAndComments(buf, offset)
-
-	//the talbe of ascii code for double quote and single quote:
-	//  \" -- 0x22/34
-	//  \' -- 0x27/37
-	if offset >= len(buf) || !(buf[offset] == '\'' || buf[offset] == 34) {
+	if offset >= len(buf) || !(buf[offset] == '\'' || buf[offset] == '"') {
 		return nil, -1
 	}
 
 	for i := offset + 1; i < len(buf); i++ {
-		if (buf[offset] == '\'' && buf[i] == '\'') || (buf[offset] == 34 && buf[i] == 34) {
+		if (buf[offset] == '\'' && buf[i] == '\'') || (buf[offset] == '"' && buf[i] == '"') {
 			return buf[offset : i+1], i + 1
 		}
 		if buf[i] == '\\' {
