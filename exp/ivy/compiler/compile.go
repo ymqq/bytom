@@ -351,7 +351,6 @@ func compileClause(b *builder, contractStk stack, contract *Contract, env *envir
 			}
 		}
 	}
-	fmt.Printf("total count[seller]: %d\n", counts["seller"])
 
 	for _, s := range clause.statements {
 		switch stmt := s.(type) {
@@ -376,14 +375,15 @@ func compileClause(b *builder, contractStk stack, contract *Contract, env *envir
 
 		case *lockStatement:
 			// TODO: permit more complex expressions for locked,
-			// like "lock x+y with foo" (?) , this suggestion has adopted
+			// like "lock x+y with foo" (?) , this suggestion has been adopted and modified
 			var lockArr []string
 			lockedValue := []byte(stmt.locked.String())
 			fmt.Println("locked string:", stmt.locked.String())
 
-			//If the string contains parentheses, the locked value are the complex expressions
+			//If the string contains parentheses "()", the locked value are the complex expressions,
+			//But Only the plus(x+y) expression is supported currently.
+			//the plus(+) expression means a connection with them in this place.
 			if lockedValue[0] == '(' && lockedValue[len(lockedValue)-1] == ')' {
-				fmt.Println("the locked expressions:", stmt.locked.String())
 				//Remove the parentheses character and the space character
 				var lockVal []byte
 				for i := 1; i < len(lockedValue)-1; i++ {
@@ -392,7 +392,6 @@ func compileClause(b *builder, contractStk stack, contract *Contract, env *envir
 					}
 					lockVal = append(lockVal, lockedValue[i])
 				}
-				fmt.Println("After remove the space character:", string(lockVal[:]))
 
 				var pos int
 				for i := 0; i < len(lockVal); i++ {
@@ -401,10 +400,8 @@ func compileClause(b *builder, contractStk stack, contract *Contract, env *envir
 						pos = i + 1
 					}
 				}
+
 				lockArr = append(lockArr, string(lockVal[pos:]))
-				for i, _ := range lockArr {
-					fmt.Printf("the NO %d value: %s\n", i, lockArr[i])
-				}
 			} else {
 				lockArr = append(lockArr, stmt.locked.String())
 			}
