@@ -67,6 +67,14 @@ func Compile(r io.Reader) ([]*Contract, error) {
 		globalEnv.add(b.name, nilType, roleBuiltin)
 	}
 
+	// If the inheritance of the contract struct is not empty, should be add the clause of contract
+	for _, contract := range contracts {
+		err := addInheritClause(contract, contracts)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// All contracts must be checked for recursiveness before any are
 	// compiled.
 	for _, contract := range contracts {

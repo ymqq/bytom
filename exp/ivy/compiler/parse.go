@@ -71,10 +71,14 @@ func parseContract(p *parser) *Contract {
 	params := parseParams(p)
 	consumeKeyword(p, "locks")
 	value := consumeIdentifier(p)
+	var inheritance []string
+	if peekKeyword(p) == "extends" {
+		inheritance = parseInheritance(p)
+	}
 	consumeTok(p, "{")
 	clauses := parseClauses(p)
 	consumeTok(p, "}")
-	return &Contract{Name: name, Params: params, Clauses: clauses, Value: value}
+	return &Contract{Name: name, Params: params, Clauses: clauses, Value: value, Inheritance: inheritance }
 }
 
 // (p1, p2: t1, p3: t2)
