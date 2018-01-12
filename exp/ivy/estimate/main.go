@@ -42,27 +42,30 @@ func main() {
 		os.Exit(0)
 	}
 
-	//the compile contract can adapt to that multiple contracts are compiled at the same time,
-	//but this place can only use a single contract
-	contract := contracts[0]
-	prog := contract.Body
+	if len(contracts) == 0 {
+		fmt.Println("The contract is empty!\n")
+		os.Exit(0)
+	}
 
-	fmt.Printf("======= %v =======\n", contract.Name)
-	arguments := os.Args[2]
-	if arguments == PARAM_GAS {
-		if err := estimate(contract, prog); err != nil {
-			fmt.Println("Error:", err)
-			os.Exit(0)
+	// Print the result for all contracts
+	for _, contract := range contracts {
+		fmt.Printf("======= %v =======\n", contract.Name)
+		arguments := os.Args[2]
+		if arguments == PARAM_GAS {
+			if err := estimate(contract); err != nil {
+				fmt.Println("Error:", err)
+				os.Exit(0)
+			}
+		} else if arguments == PARAM_SHIFT {
+			if err := shift(contract); err != nil {
+				fmt.Println("Error:", err)
+				os.Exit(0)
+			}
+		} else if arguments == PARAM_BIN {
+			fmt.Println("Contract program:")
+			fmt.Printf("%v\n\n", hex.EncodeToString(contract.Body))
+		} else {
+			fmt.Println("the command arguments is not used\n")
 		}
-	} else if arguments == PARAM_SHIFT {
-		if err := shift(contract, prog); err != nil {
-			fmt.Println("Error:", err)
-			os.Exit(0)
-		}
-	} else if arguments == PARAM_BIN {
-		fmt.Println("Contract program:")
-		fmt.Printf("%v\n\n", hex.EncodeToString(contract.Body))
-	} else {
-		fmt.Println("the command arguments is not used\n")
 	}
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/bytom/protocol/vm"
 )
 
-func estimate(contract *compiler.Contract, prog []byte) error {
+func estimate(contract *compiler.Contract) error {
 	fmt.Println("Gas estimation:")
 
 	//claculate the contract paraments consumed gas
@@ -48,7 +48,7 @@ func estimate(contract *compiler.Contract, prog []byte) error {
 	}
 
 	//estimate gas
-	result, err := calculate(prog)
+	result, err := calculate(contract.Body)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func estimate(contract *compiler.Contract, prog []byte) error {
 	return nil
 }
 
-func calculate( prog []byte) ([]int64, error) {
+func calculate(prog []byte) ([]int64, error) {
 	instructions, err := vm.ParseProgram(prog)
 	if err != nil {
 		fmt.Println("ParseProgram err:", err)

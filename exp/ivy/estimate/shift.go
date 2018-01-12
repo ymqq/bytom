@@ -8,10 +8,10 @@ import (
 	"github.com/bytom/protocol/vm"
 )
 
-func shift(contract *compiler.Contract, prog []byte) error {
+func shift(contract *compiler.Contract) error {
 	fmt.Println("Clause shift:")
 
-	instructions, err := vm.ParseProgram(prog)
+	instructions, err := vm.ParseProgram(contract.Body)
 	if err != nil {
 		fmt.Println("ParseProgram err:", err)
 		return err
