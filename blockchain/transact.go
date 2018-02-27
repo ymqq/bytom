@@ -46,7 +46,7 @@ func (bcr *BlockchainReactor) actionDecoder(action string) (func([]byte) (txbuil
 	return decoder, true
 }
 
-func MergeActions(req *BuildRequest) []map[string]interface{} {
+func mergeActions(req *BuildRequest) []map[string]interface{} {
 	actions := make([]map[string]interface{}, 0)
 	actionMap := make(map[string]map[string]interface{})
 
@@ -57,24 +57,13 @@ func MergeActions(req *BuildRequest) []map[string]interface{} {
 		}
 
 		actionKey := m["asset_id"].(string) + m["account_id"].(string)
-
-		var amount int64
-		if reflect.TypeOf(m["amount"]).Kind().String() == "float64" {
-			amount = int64(m["amount"].(float64))
-		} else {
-			amountStr := fmt.Sprintf("%v", m["amount"])
-			amount, _ = strconv.ParseInt(amountStr, 10, 64)
-		}
+		amountNumber := m["amount"].(json.Number)
+		amount, _ := amountNumber.Int64()
 
 		if tmpM, ok := actionMap[actionKey]; ok {
-			var tmpAmount int64
-			if reflect.TypeOf(tmpM["amount"]).Kind().String() == "float64" {
-				tmpAmount = int64(tmpM["amount"].(float64))
-			} else {
-				tmpAmountStr := fmt.Sprintf("%v", tmpM["amount"])
-				tmpAmount, _ = strconv.ParseInt(tmpAmountStr, 10, 64)
-			}
-			tmpM["amount"] = tmpAmount + amount
+			tmpNumber, _ := tmpM["amount"].(json.Number)
+			tmpAmount, _ := tmpNumber.Int64()
+			tmpM["amount"] = json.Number(fmt.Sprintf("%v", tmpAmount+amount))
 		} else {
 			actionMap[actionKey] = m
 			actions = append(actions, m)
@@ -89,8 +78,7 @@ func (bcr *BlockchainReactor) buildSingle(ctx context.Context, req *BuildRequest
 	if err != nil {
 		return nil, err
 	}
-
-	reqActions := MergeActions(req)
+	reqActions := mergeActions(req)
 	actions := make([]txbuilder.Action, 0, len(reqActions))
 	for i, act := range reqActions {
 		typ, ok := act["type"].(string)
@@ -209,8 +197,10 @@ func (bcr *BlockchainReactor) submitSingle(ctx context.Context, tpl *txbuilder.T
 		return nil, errors.Wrap(txbuilder.ErrMissingRawTx)
 	}
 
-	err := txbuilder.FinalizeTx(ctx, bcr.chain, tpl.Transaction)
-	if err != nil {
+	if err := txbuilder.MaterializeWitnesses(tpl); err != nil {
+		return nil, err
+	}
+	if err := txbuilder.FinalizeTx(ctx, bcr.chain, tpl.Transaction); err != nil {
 		return nil, errors.Wrapf(err, "tx %s", tpl.Transaction.ID.String())
 	}
 
@@ -286,15 +276,14 @@ func (bcr *BlockchainReactor) waitForTxInBlock(ctx context.Context, tx *legacy.T
 
 // POST /submit-transaction
 func (bcr *BlockchainReactor) submit(ctx context.Context, tpl *txbuilder.Template) Response {
-
-	txid, err := bcr.submitSingle(nil, tpl)
+	txID, err := bcr.submitSingle(nil, tpl)
 	if err != nil {
 		log.WithField("err", err).Error("submit single tx")
 		return NewErrorResponse(err)
 	}
 
-	log.WithField("txid", txid).Info("submit single tx")
-	return NewSuccessResponse(txid)
+	log.WithField("txid", txID["txid"]).Info("submit single tx")
+	return NewSuccessResponse(txID)
 }
 
 // POST /sign-submit-transaction
@@ -302,13 +291,10 @@ func (bcr *BlockchainReactor) signSubmit(ctx context.Context, x struct {
 	Password []string           `json:"password"`
 	Txs      txbuilder.Template `json:"transaction"`
 }) Response {
-
-	var err error
-	if err = txbuilder.Sign(ctx, &x.Txs, nil, x.Password, bcr.pseudohsmSignTemplate); err != nil {
+	if err := txbuilder.Sign(ctx, &x.Txs, nil, x.Password[0], bcr.pseudohsmSignTemplate); err != nil {
 		log.WithField("build err", err).Error("fail on sign transaction.")
 		return NewErrorResponse(err)
 	}
-
 	log.Info("Sign Transaction complete.")
 
 	txID, err := bcr.submitSingle(nil, &x.Txs)
