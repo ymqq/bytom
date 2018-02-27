@@ -125,6 +125,8 @@ func AddCommands() {
 
 	BytomcliCmd.AddCommand(gasRateCmd)
 
+	BytomcliCmd.AddCommand(compileCmd)
+
 	BytomcliCmd.AddCommand(createTransactionFeedCmd)
 	BytomcliCmd.AddCommand(listTransactionFeedsCmd)
 	BytomcliCmd.AddCommand(deleteTransactionFeedCmd)
