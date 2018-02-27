@@ -54,9 +54,12 @@ func compileIvy(req compileReq) (compileResp, error) {
 		resp.Params = append(resp.Params, *param)
 	}
 
-	resp.Program, err = compiler.Instantiate(contract.Body, contract.Params, false, req.Args)
-	if err != nil {
-		resp.Error = err.Error()
+	resp.Program = contract.Body
+	if req.Args != nil {
+		resp.Program, err = compiler.Instantiate(contract.Body, contract.Params, false, req.Args)
+		if err != nil {
+			resp.Error = err.Error()
+		}
 	}
 
 	for _, contract := range compiled {
