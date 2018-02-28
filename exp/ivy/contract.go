@@ -67,7 +67,12 @@ var cmdLockWithPublicKey = &cobra.Command{
 			os.Exit(0)
 		}
 
-		pubkey, _ := hex.DecodeString(pubkeyStr)
+		pubkey, err := hex.DecodeString(pubkeyStr)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
 		contractProgram, err := instance.PayToLockWithPublicKey(pubkey)
 		if err != nil {
 			fmt.Println(err)
@@ -85,7 +90,7 @@ var cmdLockWithPublicKey = &cobra.Command{
 }
 
 var cmdLockWithMultiSig = &cobra.Command{
-	Use:   "LockWithMultiSig [pubkey1] [pubkey2] [pubkey3]",
+	Use:   "LockWithMultiSig <pubkey1> <pubkey2> <pubkey3>",
 	Short: "create a new contract for LockWithMultiSig",
 	Args:  cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -98,9 +103,24 @@ var cmdLockWithMultiSig = &cobra.Command{
 			os.Exit(0)
 		}
 
-		pubkey1, _ := hex.DecodeString(pubkeyStr1)
-		pubkey2, _ := hex.DecodeString(pubkeyStr2)
-		pubkey3, _ := hex.DecodeString(pubkeyStr3)
+		pubkey1, err := hex.DecodeString(pubkeyStr1)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
+		pubkey2, err := hex.DecodeString(pubkeyStr2)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
+		pubkey3, err := hex.DecodeString(pubkeyStr3)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
 		contractProgram, err := instance.PayToLockWithMultiSig(pubkey1, pubkey2, pubkey3)
 		if err != nil {
 			fmt.Println(err)
@@ -128,7 +148,12 @@ var cmdLockWithPublicKeyHash = &cobra.Command{
 			os.Exit(0)
 		}
 
-		pubkeyHash, _ := hex.DecodeString(pubkeyHashStr)
+		pubkeyHash, err := hex.DecodeString(pubkeyHashStr)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
 		contractProgram, err := instance.PayToLockWithPublicKeyHash(pubkeyHash)
 		if err != nil {
 			fmt.Println(err)
@@ -156,7 +181,12 @@ var cmdRevealPreimage = &cobra.Command{
 			os.Exit(0)
 		}
 
-		valueHash, _ := hex.DecodeString(valueHashStr)
+		valueHash, err := hex.DecodeString(valueHashStr)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
 		contractProgram, err := instance.PayToRevealPreimage(valueHash)
 		if err != nil {
 			fmt.Println(err)
@@ -174,7 +204,7 @@ var cmdRevealPreimage = &cobra.Command{
 }
 
 var cmdTradeOffer = &cobra.Command{
-	Use:   "TradeOffer [assetID] [amount] [seller] [pubkey]",
+	Use:   "TradeOffer <assetID> <amount> <seller> <pubkey>",
 	Short: "create a new contract for TradeOffer",
 	Args:  cobra.ExactArgs(4),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -187,7 +217,12 @@ var cmdTradeOffer = &cobra.Command{
 			os.Exit(0)
 		}
 
-		assetByte, _ := hex.DecodeString(assetStr)
+		assetByte, err := hex.DecodeString(assetStr)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
 		var b [32]byte
 		copy(b[:], assetByte[:32])
 		assetID := bc.NewAssetID(b)
@@ -204,7 +239,11 @@ var cmdTradeOffer = &cobra.Command{
 			os.Exit(0)
 		}
 
-		pubkey, _ := hex.DecodeString(pubkeyStr)
+		pubkey, err := hex.DecodeString(pubkeyStr)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
 
 		contractProgram, err := instance.PayToTradeOffer(assetID, amount, seller, pubkey)
 		if err != nil {
@@ -223,7 +262,7 @@ var cmdTradeOffer = &cobra.Command{
 }
 
 var cmdEscrow = &cobra.Command{
-	Use:   "Escrow [pubkey] [sender] [recipient]",
+	Use:   "Escrow <pubkey> <sender> <recipient>",
 	Short: "create a new contract for Escrow",
 	Args:  cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -235,7 +274,12 @@ var cmdEscrow = &cobra.Command{
 			os.Exit(0)
 		}
 
-		pubkey, _ := hex.DecodeString(pubkeyStr)
+		pubkey, err := hex.DecodeString(pubkeyStr)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
 		sender, err := hex.DecodeString(senderStr)
 		if err != nil {
 			fmt.Println(err)
@@ -265,7 +309,7 @@ var cmdEscrow = &cobra.Command{
 }
 
 var cmdLoanCollateral = &cobra.Command{
-	Use:   "LoanCollateral [assetID] [amount] [dueTime] [lender] [borrower]",
+	Use:   "LoanCollateral <assetID> <amount> <dueTime> <lender> <borrower>",
 	Short: "create a new contract for LoanCollateral",
 	Args:  cobra.ExactArgs(5),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -279,7 +323,12 @@ var cmdLoanCollateral = &cobra.Command{
 			os.Exit(0)
 		}
 
-		assetByte, _ := hex.DecodeString(assetStr)
+		assetByte, err := hex.DecodeString(assetStr)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
 		var b [32]byte
 		copy(b[:], assetByte[:32])
 		assetID := bc.NewAssetID(b)
@@ -327,7 +376,7 @@ var cmdLoanCollateral = &cobra.Command{
 }
 
 var cmdCallOption = &cobra.Command{
-	Use:   "CallOption [amountPrice] [assetID] [seller] [buyerPubkey] [deadline]",
+	Use:   "CallOption <amountPrice> <assetID> <seller> <buyerPubkey> <deadline>",
 	Short: "create a new contract for CallOption",
 	Args:  cobra.ExactArgs(5),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -347,7 +396,12 @@ var cmdCallOption = &cobra.Command{
 			os.Exit(0)
 		}
 
-		assetByte, _ := hex.DecodeString(assetStr)
+		assetByte, err := hex.DecodeString(assetStr)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+
 		var b [32]byte
 		copy(b[:], assetByte[:32])
 		assetID := bc.NewAssetID(b)
@@ -358,7 +412,11 @@ var cmdCallOption = &cobra.Command{
 			os.Exit(0)
 		}
 
-		buyerPubkey, _ := hex.DecodeString(buyerPubkeyStr)
+		buyerPubkey, err := hex.DecodeString(buyerPubkeyStr)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
 
 		deadlineStr = strings.Replace(deadlineStr, "*", " ", -1)
 		loc, _ := time.LoadLocation("Local")
