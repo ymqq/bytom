@@ -2,8 +2,8 @@ package commands
 
 import (
 	"bufio"
+	"context"
 	"encoding/hex"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -40,15 +40,13 @@ var compileCmd = &cobra.Command{
 		fileName := args[0]
 		inputFile, err := ioutil.ReadFile(fileName)
 		if err != nil {
-			fmt.Print(err)
-			jww.FEEDBACK.Printf("\n\n")
+			jww.ERROR.Println(err)
 			os.Exit(util.ErrLocalExe)
 		}
 
 		contractArgs, err := BuildContractArgs(args)
 		if err != nil {
-			fmt.Print(err)
-			jww.FEEDBACK.Printf("\n\n")
+			jww.ERROR.Println(err)
 			os.Exit(util.ErrLocalExe)
 		}
 
@@ -57,13 +55,11 @@ var compileCmd = &cobra.Command{
 			Args     []compiler.ContractArg `json:"args"`
 		}{Contract: string(inputFile), Args: contractArgs}
 
-		jww.FEEDBACK.Printf("\n\n")
-		data, exitCode := util.ClientCall("/compile", &compileReq)
-		if exitCode != util.Success {
-			os.Exit(exitCode)
-		}
+		var response interface{}
+		client := util.MustRPCClient()
+		client.Call(context.Background(), "/compile", &compileReq, &response)
 
-		printJSON(data)
+		printJSON(response)
 	},
 }
 
