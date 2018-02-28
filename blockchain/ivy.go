@@ -1,8 +1,6 @@
 package blockchain
 
 import (
-	"bytes"
-	"fmt"
 	"strings"
 
 	chainjson "github.com/bytom/encoding/json"
@@ -21,12 +19,12 @@ type (
 		Program chainjson.HexBytes `json:"program"`
 		Params  []compiler.Param   `json:"params"`
 		Value   string             `json:"value"`
-		Clauses []ClauseInfo       `json:"clause_info"`
+		Clauses []clauseInfo       `json:"clause_info"`
 		Opcodes string             `json:"opcodes"`
 		Error   string             `json:"error"`
 	}
 
-	ClauseInfo struct {
+	clauseInfo struct {
 		Name      string               `json:"name"`
 		Args      []compiler.Param     `json:"args"`
 		Values    []compiler.ValueInfo `json:"value_info"`
@@ -64,7 +62,7 @@ func compileIvy(req compileReq) (compileResp, error) {
 
 	for _, contract := range compiled {
 		for _, clause := range contract.Clauses {
-			info := ClauseInfo{
+			info := clauseInfo{
 				Name:      clause.Name,
 				Args:      []compiler.Param{},
 				Mintimes:  clause.MinTimes,
@@ -90,11 +88,7 @@ func compileIvy(req compileReq) (compileResp, error) {
 		}
 	}
 
-	buf := new(bytes.Buffer)
-	for _, step := range contract.Steps {
-		fmt.Fprintf(buf, "%s ", step.Opcodes)
-	}
-	resp.Opcodes = buf.String()
+	resp.Opcodes = contract.Opcodes
 
 	return resp, nil
 }
