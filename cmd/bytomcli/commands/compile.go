@@ -21,6 +21,8 @@ import (
 )
 
 var (
+	// ErrInvalidNumber means that the number of arguments is illegal
+	ErrInvalidNumber = errors.New("invalid number of arguments")
 	// ErrInvalidLength means that the length is illegal
 	ErrInvalidLength = errors.New("invalid length")
 )
@@ -39,20 +41,21 @@ var compileCmd = &cobra.Command{
 		inputFile, err := ioutil.ReadFile(fileName)
 		if err != nil {
 			fmt.Print(err)
-			os.Exit(0)
+			jww.FEEDBACK.Printf("\n\n")
+			os.Exit(util.ErrLocalExe)
 		}
-		inputStr := string(inputFile)
 
 		contractArgs, err := BuildContractArgs(args)
 		if err != nil {
 			fmt.Print(err)
-			os.Exit(0)
+			jww.FEEDBACK.Printf("\n\n")
+			os.Exit(util.ErrLocalExe)
 		}
 
 		var compileReq = struct {
 			Contract string                 `json:"contract"`
 			Args     []compiler.ContractArg `json:"args"`
-		}{Contract: inputStr, Args: contractArgs}
+		}{Contract: string(inputFile), Args: contractArgs}
 
 		jww.FEEDBACK.Printf("\n\n")
 		data, exitCode := util.ClientCall("/compile", &compileReq)
@@ -64,29 +67,85 @@ var compileCmd = &cobra.Command{
 	},
 }
 
+// CheckCompileArgs check the number of contract's arguments
+func CheckCompileArgs(contractName string, args []string) (err error) {
+	usage := "Usage:\n  bytomcli compile <contractPathFile>"
+	switch contractName {
+	case "LockWithPublicKey":
+		if len(args) != 2 {
+			err = errors.WithDetailf(ErrInvalidNumber, "%s <pubkey> [flags]\n", usage)
+		}
+	case "LockWithMultiSig":
+		if len(args) != 4 {
+			err = errors.WithDetailf(ErrInvalidNumber, "%s <pubkey1> <pubkey2> <pubkey3> [flags]\n", usage)
+		}
+	case "LockWithPublicKeyHash":
+		if len(args) != 2 {
+			err = errors.WithDetailf(ErrInvalidNumber, "%s <pubkeyHash> [flags]\n", usage)
+		}
+	case "RevealPreimage":
+		if len(args) != 2 {
+			err = errors.WithDetailf(ErrInvalidNumber, "%s <valueHash> [flags]\n", usage)
+		}
+	case "TradeOffer":
+		if len(args) != 5 {
+			err = errors.WithDetailf(ErrInvalidNumber, "%s <assetID> <amount> <seller> <pubkey> [flags]\n", usage)
+		}
+	case "Escrow":
+		if len(args) != 4 {
+			err = errors.WithDetailf(ErrInvalidNumber, "%s <pubkey> <sender> <recipient> [flags]\n", usage)
+		}
+	case "LoanCollateral":
+		if len(args) != 6 {
+			err = errors.WithDetailf(ErrInvalidNumber, "%s <assetID> <amount> <dueTime> <lender> <borrower> [flags]\n", usage)
+		}
+	case "CallOption":
+		if len(args) != 6 {
+			err = errors.WithDetailf(ErrInvalidNumber, "%s <amountPrice> <assetID> <seller> <buyerPubkey> <deadline> [flags]\n", usage)
+		}
+	}
+
+	return
+}
+
 // BuildContractArgs build the ContractArg for contact
-func BuildContractArgs(args []string) (contractArgs []compiler.ContractArg, err error) {
+func BuildContractArgs(args []string) ([]compiler.ContractArg, error) {
+	var contractArgs []compiler.ContractArg
+
 	inputFile, err := os.Open(args[0])
 	if err != nil {
-		return
+		return nil, err
 	}
 	defer inputFile.Close()
 
 	inputReader := bufio.NewReader(inputFile)
 	contracts, err := compiler.Compile(inputReader)
+	if err != nil {
+		return nil, err
+	}
+
 	if len(contracts) != 1 {
 		err = errors.New("Invalid contract format, because of support only one contract!")
-		return
+		return nil, err
 	}
 
 	contract := contracts[0]
+	if err := CheckCompileArgs(contract.Name, args); err != nil {
+		return nil, err
+	}
+
 	switch contract.Name {
 	case "LockWithPublicKey":
 		pubkeyStr := args[1]
 		if len(pubkeyStr) != 64 {
 			err = errors.WithDetailf(ErrInvalidLength, "the length of byte pubkey[%d] is not equal 64\n", len(pubkeyStr))
+			return nil, err
 		}
-		pubkey, _ := hex.DecodeString(pubkeyStr)
+
+		pubkey, err := hex.DecodeString(pubkeyStr)
+		if err != nil {
+			return nil, err
+		}
 		contractArgs = append(contractArgs, compiler.ContractArg{S: (*json.HexBytes)(&pubkey)})
 
 	case "LockWithMultiSig":
@@ -96,11 +155,23 @@ func BuildContractArgs(args []string) (contractArgs []compiler.ContractArg, err 
 		if len(pubkeyStr1) != 64 || len(pubkeyStr2) != 64 || len(pubkeyStr3) != 64 {
 			err = errors.WithDetailf(ErrInvalidLength, "the length of byte pubkey1[%d] or pubkey2[%d] or pubkey3[%d] is not equal 64\n",
 				len(pubkeyStr1), len(pubkeyStr2), len(pubkeyStr3))
+			return nil, err
 		}
 
-		pubkey1, _ := hex.DecodeString(pubkeyStr1)
-		pubkey2, _ := hex.DecodeString(pubkeyStr2)
-		pubkey3, _ := hex.DecodeString(pubkeyStr3)
+		pubkey1, err := hex.DecodeString(pubkeyStr1)
+		if err != nil {
+			return nil, err
+		}
+
+		pubkey2, err := hex.DecodeString(pubkeyStr2)
+		if err != nil {
+			return nil, err
+		}
+
+		pubkey3, err := hex.DecodeString(pubkeyStr3)
+		if err != nil {
+			return nil, err
+		}
 
 		contractArgs = append(contractArgs, compiler.ContractArg{S: (*json.HexBytes)(&pubkey1)})
 		contractArgs = append(contractArgs, compiler.ContractArg{S: (*json.HexBytes)(&pubkey2)})
@@ -110,18 +181,28 @@ func BuildContractArgs(args []string) (contractArgs []compiler.ContractArg, err 
 		pubkeyHashStr := args[1]
 		if len(pubkeyHashStr) != 64 {
 			err = errors.WithDetailf(ErrInvalidLength, "the length of byte pubkeyHash[%d] is not equal 64\n", len(pubkeyHashStr))
+			return nil, err
 		}
 
-		pubkeyHash, _ := hex.DecodeString(pubkeyHashStr)
+		pubkeyHash, err := hex.DecodeString(pubkeyHashStr)
+		if err != nil {
+			return nil, err
+		}
+
 		contractArgs = append(contractArgs, compiler.ContractArg{S: (*json.HexBytes)(&pubkeyHash)})
 
 	case "RevealPreimage":
 		valueHashStr := args[1]
 		if len(valueHashStr) != 64 {
 			err = errors.WithDetailf(ErrInvalidLength, "the length of byte valueHash[%d] is not equal 64\n", len(valueHashStr))
+			return nil, err
 		}
 
-		valueHash, _ := hex.DecodeString(valueHashStr)
+		valueHash, err := hex.DecodeString(valueHashStr)
+		if err != nil {
+			return nil, err
+		}
+
 		contractArgs = append(contractArgs, compiler.ContractArg{S: (*json.HexBytes)(&valueHash)})
 
 	case "TradeOffer":
@@ -131,15 +212,31 @@ func BuildContractArgs(args []string) (contractArgs []compiler.ContractArg, err 
 		pubkeyStr := args[4]
 		if len(assetStr) != 64 || len(pubkeyStr) != 64 {
 			err = errors.WithDetailf(ErrInvalidLength, "the length of byte assetID[%d] or pubkey[%s] is not equal 64", len(assetStr), len(pubkeyStr))
+			return nil, err
 		}
 
-		assetByte, _ := hex.DecodeString(assetStr)
+		assetByte, err := hex.DecodeString(assetStr)
+		if err != nil {
+			return nil, err
+		}
 		var b [32]byte
 		copy(b[:], assetByte[:32])
 		assetID := bc.NewAssetID(b)
-		amount, _ := strconv.ParseUint(amountStr, 10, 64)
-		seller, _ := hex.DecodeString(sellerStr)
-		pubkey, _ := hex.DecodeString(pubkeyStr)
+
+		amount, err := strconv.ParseUint(amountStr, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		seller, err := hex.DecodeString(sellerStr)
+		if err != nil {
+			return nil, err
+		}
+
+		pubkey, err := hex.DecodeString(pubkeyStr)
+		if err != nil {
+			return nil, err
+		}
 
 		assetRequested := assetID.Bytes()
 		contractArgs = append(contractArgs, compiler.ContractArg{S: (*json.HexBytes)(&assetRequested)})
@@ -154,11 +251,23 @@ func BuildContractArgs(args []string) (contractArgs []compiler.ContractArg, err 
 		recipientStr := args[3]
 		if len(pubkeyStr) != 64 {
 			err = errors.WithDetailf(ErrInvalidLength, "the length of byte pubkey[%d] is not equal 64\n", len(pubkeyStr))
+			return nil, err
 		}
 
-		pubkey, _ := hex.DecodeString(pubkeyStr)
-		sender, _ := hex.DecodeString(senderStr)
-		recipient, _ := hex.DecodeString(recipientStr)
+		pubkey, err := hex.DecodeString(pubkeyStr)
+		if err != nil {
+			return nil, err
+		}
+
+		sender, err := hex.DecodeString(senderStr)
+		if err != nil {
+			return nil, err
+		}
+
+		recipient, err := hex.DecodeString(recipientStr)
+		if err != nil {
+			return nil, err
+		}
 
 		contractArgs = append(contractArgs, compiler.ContractArg{S: (*json.HexBytes)(&pubkey)})
 		contractArgs = append(contractArgs, compiler.ContractArg{S: (*json.HexBytes)(&sender)})
@@ -172,21 +281,38 @@ func BuildContractArgs(args []string) (contractArgs []compiler.ContractArg, err 
 		borrowerStr := args[5]
 		if len(assetStr) != 64 {
 			err = errors.WithDetailf(ErrInvalidLength, "the length of byte assetID[%d] is not equal 64\n", len(assetStr))
+			return nil, err
 		}
 
-		assetByte, _ := hex.DecodeString(assetStr)
+		assetByte, err := hex.DecodeString(assetStr)
+		if err != nil {
+			return nil, err
+		}
 		var b [32]byte
 		copy(b[:], assetByte[:32])
 		assetID := bc.NewAssetID(b)
 
-		amount, _ := strconv.ParseUint(amountStr, 10, 64)
+		amount, err := strconv.ParseUint(amountStr, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+
 		dueTimeStr = strings.Replace(dueTimeStr, "*", " ", -1)
 		loc, _ := time.LoadLocation("Local")
-		var dueTime time.Time
-		dueTime, err = time.ParseInLocation(TimeLayout, dueTimeStr, loc)
+		dueTime, err := time.ParseInLocation(TimeLayout, dueTimeStr, loc)
+		if err != nil {
+			return nil, err
+		}
 
-		lender, _ := hex.DecodeString(lenderStr)
-		borrower, _ := hex.DecodeString(borrowerStr)
+		lender, err := hex.DecodeString(lenderStr)
+		if err != nil {
+			return nil, err
+		}
+
+		borrower, err := hex.DecodeString(borrowerStr)
+		if err != nil {
+			return nil, err
+		}
 
 		assetLoaned := assetID.Bytes()
 		contractArgs = append(contractArgs, compiler.ContractArg{S: (*json.HexBytes)(&assetLoaned)})
@@ -205,20 +331,38 @@ func BuildContractArgs(args []string) (contractArgs []compiler.ContractArg, err 
 		deadlineStr := args[5]
 		if len(assetStr) != 64 || len(buyerPubkeyStr) != 64 {
 			err = errors.WithDetailf(ErrInvalidLength, "the length of byte assetID[%d] or buyerPubkey[%d] is not equal 64\n", len(assetStr), len(buyerPubkeyStr))
+			return nil, err
 		}
 
-		amountPrice, _ := strconv.ParseUint(amountPriceStr, 10, 64)
-		assetByte, _ := hex.DecodeString(assetStr)
+		amountPrice, err := strconv.ParseUint(amountPriceStr, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		assetByte, err := hex.DecodeString(assetStr)
+		if err != nil {
+			return nil, err
+		}
 		var b [32]byte
 		copy(b[:], assetByte[:32])
 		assetID := bc.NewAssetID(b)
 
-		seller, _ := hex.DecodeString(sellerStr)
-		buyerPubkey, _ := hex.DecodeString(buyerPubkeyStr)
+		seller, err := hex.DecodeString(sellerStr)
+		if err != nil {
+			return nil, err
+		}
+
+		buyerPubkey, err := hex.DecodeString(buyerPubkeyStr)
+		if err != nil {
+			return nil, err
+		}
+
 		deadlineStr = strings.Replace(deadlineStr, "*", " ", -1)
 		loc, _ := time.LoadLocation("Local")
-		var deadline time.Time
-		deadline, err = time.ParseInLocation(TimeLayout, deadlineStr, loc)
+		deadline, err := time.ParseInLocation(TimeLayout, deadlineStr, loc)
+		if err != nil {
+			return nil, err
+		}
 
 		strikePrice := int64(amountPrice)
 		contractArgs = append(contractArgs, compiler.ContractArg{I: &strikePrice})
@@ -231,7 +375,8 @@ func BuildContractArgs(args []string) (contractArgs []compiler.ContractArg, err 
 
 	default:
 		err = errors.New("Invalid contract name!")
+		return nil, err
 	}
 
-	return
+	return contractArgs, nil
 }
