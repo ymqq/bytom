@@ -33,7 +33,7 @@ const (
 )
 
 var compileCmd = &cobra.Command{
-	Use:   "compile <contractPathFile> <contractArgs>",
+	Use:   "compile <contractPathFile> [contractArgs]",
 	Short: "Compile contract of Bytomcli",
 	Args:  cobra.RangeArgs(1, 20),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -44,10 +44,13 @@ var compileCmd = &cobra.Command{
 			os.Exit(util.ErrLocalExe)
 		}
 
-		contractArgs, err := BuildContractArgs(args)
-		if err != nil {
-			jww.ERROR.Println(err)
-			os.Exit(util.ErrLocalExe)
+		var contractArgs []compiler.ContractArg
+		if len(args) > 1 {
+			contractArgs, err = BuildContractArgs(args)
+			if err != nil {
+				jww.ERROR.Println(err)
+				os.Exit(util.ErrLocalExe)
+			}
 		}
 
 		var compileReq = struct {

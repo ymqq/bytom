@@ -137,7 +137,7 @@ func main() {
 				fmt.Fprintf(buf, "\t_contractArgs = append(_contractArgs, compiler.ContractArg{S: (*json.HexBytes)(&%s)})\n", param.Name)
 			}
 		}
-		fmt.Fprintf(buf, "\treturn compiler.Instantiate(%sBodyBytes, _contractParams,  %v, _contractArgs)\n", contract.Name, contract.Recursive)
+		fmt.Fprintf(buf, "\treturn compiler.Instantiate(%sBodyBytes, _contractParams, %v, _contractArgs)\n", contract.Name, contract.Recursive)
 		fmt.Fprintf(buf, "}\n\n")
 
 		fmt.Fprintf(buf, "// ParsePayTo%s parses the arguments out of an instantiation of contract %s.\n", contract.Name, contract.Name)
