@@ -5,6 +5,7 @@ import (
 
 	chainjson "github.com/bytom/encoding/json"
 	"github.com/bytom/exp/ivy/compiler"
+	"github.com/bytom/protocol/vm"
 )
 
 type (
@@ -55,6 +56,11 @@ func compileIvy(req compileReq) (compileResp, error) {
 		resp.Program, err = compiler.Instantiate(contract.Body, contract.Params, false, req.Args)
 		if err != nil {
 			resp.Error = err.Error()
+		}
+
+		resp.Opcodes, err = vm.Disassemble(resp.Program)
+		if err != nil {
+			return resp, err
 		}
 	}
 
