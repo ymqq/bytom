@@ -12,6 +12,7 @@ import (
 	"github.com/bytom/blockchain/asset"
 	"github.com/bytom/blockchain/query"
 	"github.com/bytom/consensus"
+	"github.com/bytom/consensus/segwit"
 	"github.com/bytom/crypto/sha3pool"
 	chainjson "github.com/bytom/encoding/json"
 	"github.com/bytom/errors"
@@ -133,8 +134,10 @@ func (w *Wallet) reverseAccountUTXOs(batch db.Batch, b *legacy.Block, txStatus *
 				//retirement
 				continue
 			}
-			//delete new UTXOs
+			//delete new account UTXOs
 			batch.Delete(account.UTXOKey(*resOutID))
+			//maybe delete new smart contract UTXOs
+			batch.Delete(account.SUTXOKey(*resOutID))
 		}
 	}
 }
@@ -161,7 +164,7 @@ func saveExternalAssetDefinition(b *legacy.Block, walletDB db.DB) {
 	}
 }
 
-// Summary is ....
+//Summary is the struct of transaction's input and output summary
 type Summary struct {
 	Type         string             `json:"type"`
 	AssetID      bc.AssetID         `json:"asset_id,omitempty"`
@@ -172,7 +175,7 @@ type Summary struct {
 	Arbitrary    chainjson.HexBytes `json:"arbitrary,omitempty"`
 }
 
-// TxSummary is ....
+//TxSummary is the struct of transaction summary
 type TxSummary struct {
 	ID        bc.Hash   `json:"id"`
 	Timestamp time.Time `json:"timestamp"`
@@ -205,7 +208,10 @@ func (w *Wallet) buildAccountUTXOs(batch db.Batch, b *legacy.Block, txStatus *bc
 	//handle spent UTXOs
 	delOutputIDs := prevoutDBKeys(b, txStatus)
 	for _, delOutputID := range delOutputIDs {
+		//delete spent account UTXOs
 		batch.Delete(account.UTXOKey(delOutputID))
+		//maybe delete spent smart contract UTXOs
+		batch.Delete(account.SUTXOKey(delOutputID))
 	}
 
 	//handle new UTXOs
@@ -277,6 +283,21 @@ func loadAccountInfo(outs []*rawOutput, w *Wallet) []*accountOutput {
 
 	var hash [32]byte
 	for s := range outsByScript {
+		//smart contract UTXO
+		if !segwit.IsP2WScript([]byte(s)) {
+			for _, out := range outsByScript[s] {
+				newOut := &accountOutput{
+					rawOutput:      *out,
+					AccountID:      account.ContractAccount,
+					change:         false,
+					ExtContractTag: true,
+				}
+				result = append(result, newOut)
+			}
+
+			continue
+		}
+
 		sha3pool.Sum256(hash[:], []byte(s))
 		bytes := w.DB.Get(account.CPKey(hash))
 		if bytes == nil {
@@ -335,7 +356,15 @@ func upsertConfirmedAccountOutputs(outs []*accountOutput, batch db.Batch) error 
 		if err != nil {
 			return errors.Wrap(err, "failed marshal accountutxo")
 		}
-		batch.Set(account.UTXOKey(out.OutputID), data)
+
+		if !segwit.IsP2WScript(out.ControlProgram) {
+			//smart contract UTXOs
+			batch.Set(account.SUTXOKey(out.OutputID), data)
+		} else {
+			//account UTXOs
+			batch.Set(account.UTXOKey(out.OutputID), data)
+		}
+
 	}
 	return nil
 }
@@ -351,6 +380,13 @@ func (w *Wallet) filterAccountTxs(b *legacy.Block, txStatus *bc.TransactionStatu
 
 			sha3pool.Sum256(hash[:], v.ControlProgram)
 			if bytes := w.DB.Get(account.CPKey(hash)); bytes != nil {
+				annotatedTxs = append(annotatedTxs, buildAnnotatedTransaction(tx, b, statusFail, pos))
+				local = true
+				break
+			}
+
+			//smart contract transactions
+			if !segwit.IsP2WScript(v.ControlProgram) {
 				annotatedTxs = append(annotatedTxs, buildAnnotatedTransaction(tx, b, statusFail, pos))
 				local = true
 				break
@@ -475,15 +511,19 @@ func (w *Wallet) GetTransactionsByAccountID(accountID string) ([]*query.Annotate
 }
 
 //GetAccountUTXOs return all account unspent outputs
-func (w *Wallet) GetAccountUTXOs(id string) ([]account.UTXO, error) {
+func (w *Wallet) GetAccountUTXOs(id string, isSmartContract bool) ([]account.UTXO, error) {
 	accountUTXO := account.UTXO{}
 	accountUTXOs := make([]account.UTXO, 0)
 
-	accountUTXOIter := w.DB.IteratorPrefix([]byte(account.UTXOPreFix + id))
+	prefix := account.UTXOPreFix
+	if isSmartContract {
+		prefix = account.SUTXOPrefix
+	}
+	accountUTXOIter := w.DB.IteratorPrefix([]byte(prefix + id))
 	defer accountUTXOIter.Release()
 	for accountUTXOIter.Next() {
 		if err := json.Unmarshal(accountUTXOIter.Value(), &accountUTXO); err != nil {
-			hashKey := accountUTXOIter.Key()[len(account.UTXOPreFix):]
+			hashKey := accountUTXOIter.Key()[len(prefix):]
 			log.WithField("UTXO hash", string(hashKey)).Warn("get account UTXO")
 			continue
 		}
