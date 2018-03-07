@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"strconv"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -57,13 +59,24 @@ func mergeActions(req *BuildRequest) []map[string]interface{} {
 		}
 
 		actionKey := m["asset_id"].(string) + m["account_id"].(string)
-		amountNumber := m["amount"].(json.Number)
-		amount, _ := amountNumber.Int64()
+
+		var amount int64
+		if reflect.TypeOf(m["amount"]).Kind().String() == "float64" {
+			amount = int64(m["amount"].(float64))
+		} else {
+			amountStr := fmt.Sprintf("%v", m["amount"])
+			amount, _ = strconv.ParseInt(amountStr, 10, 64)
+		}
 
 		if tmpM, ok := actionMap[actionKey]; ok {
-			tmpNumber, _ := tmpM["amount"].(json.Number)
-			tmpAmount, _ := tmpNumber.Int64()
-			tmpM["amount"] = json.Number(fmt.Sprintf("%v", tmpAmount+amount))
+			var tmpAmount int64
+			if reflect.TypeOf(tmpM["amount"]).Kind().String() == "float64" {
+				tmpAmount = int64(tmpM["amount"].(float64))
+			} else {
+				tmpAmountStr := fmt.Sprintf("%v", tmpM["amount"])
+				tmpAmount, _ = strconv.ParseInt(tmpAmountStr, 10, 64)
+			}
+			tmpM["amount"] = tmpAmount + amount
 		} else {
 			actionMap[actionKey] = m
 			actions = append(actions, m)
