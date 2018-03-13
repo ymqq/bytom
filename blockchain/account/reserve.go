@@ -29,10 +29,10 @@ var (
 	// new change outputs will be created
 	// in sufficient amounts to satisfy the request.
 	ErrReserved = errors.New("reservation found outputs already reserved")
-	//ErrMatchUTXO means no enough valid utxos
+	// ErrMatchUTXO indicates the account doesn't contain enough utxo to satisfy the reservation.
 	ErrMatchUTXO = errors.New("can't match enough valid utxos")
-	//ErrReservation means no reservation
-	ErrReservation = errors.New("can't find reservation")
+	// ErrReservation indicates the reserver doesn't found the reservation with the provided ID.
+	ErrReservation = errors.New("couldn't find reservation")
 )
 
 // UTXO describes an individual account utxo.
@@ -52,7 +52,6 @@ type UTXO struct {
 	AccountID           string
 	Address             string
 	ControlProgramIndex uint64
-	ExtContractTag      bool
 	ValidHeight         uint64
 }
 
@@ -158,19 +157,19 @@ func (re *reserver) reserve(src source, amount uint64, clientToken *string, exp 
 
 // ReserveUTXO reserves a specific utxo for spending. The resulting
 // reservation expires at exp.
-func (re *reserver) ReserveUTXO(ctx context.Context, out bc.Hash, clientToken *string, exp time.Time, isSUTXO bool) (*reservation, error) {
+func (re *reserver) ReserveUTXO(ctx context.Context, out bc.Hash, clientToken *string, exp time.Time) (*reservation, error) {
 	if clientToken == nil {
-		return re.reserveUTXO(ctx, out, exp, nil, isSUTXO)
+		return re.reserveUTXO(ctx, out, exp, nil)
 	}
 
 	untypedRes, err := re.idempotency.Once(*clientToken, func() (interface{}, error) {
-		return re.reserveUTXO(ctx, out, exp, clientToken, isSUTXO)
+		return re.reserveUTXO(ctx, out, exp, clientToken)
 	})
 	return untypedRes.(*reservation), err
 }
 
-func (re *reserver) reserveUTXO(ctx context.Context, out bc.Hash, exp time.Time, clientToken *string, isSUTXO bool) (*reservation, error) {
-	u, err := findSpecificUTXO(re.db, out, isSUTXO)
+func (re *reserver) reserveUTXO(ctx context.Context, out bc.Hash, exp time.Time, clientToken *string) (*reservation, error) {
+	u, err := findSpecificUTXO(re.db, out)
 	if err != nil {
 		return nil, err
 	}
@@ -293,11 +292,6 @@ func (sr *sourceReserver) reserve(rid uint64, amount uint64) ([]*UTXO, uint64, b
 			continue
 		}
 
-		// If the contract is a custom contract, skip it.
-		if u.ExtContractTag {
-			continue
-		}
-
 		reserved += u.Amount
 		reservedUTXOs = append(reservedUTXOs, u)
 		if reserved >= amount {
@@ -373,17 +367,14 @@ func findMatchingUTXOs(db dbm.DB, src source, currentHeight func() uint64) ([]*U
 	return utxos, isImmature, nil
 }
 
-func findSpecificUTXO(db dbm.DB, outHash bc.Hash, isSUTXO bool) (*UTXO, error) {
+func findSpecificUTXO(db dbm.DB, outHash bc.Hash) (*UTXO, error) {
 	u := &UTXO{}
 
-	keyFunction := UTXOKey
-	if isSUTXO {
-		keyFunction = SUTXOKey
-	}
-
-	data := db.Get(keyFunction(outHash))
+	data := db.Get(StandardUTXOKey(outHash))
 	if data == nil {
-		return nil, errors.Wrapf(ErrMatchUTXO, "output_id = %s", outHash.String())
+		if data = db.Get(ContractUTXOKey(outHash)); data == nil {
+			return nil, errors.Wrapf(ErrMatchUTXO, "output_id = %s", outHash.String())
+		}
 	}
 	return u, json.Unmarshal(data, u)
 }

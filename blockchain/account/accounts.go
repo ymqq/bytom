@@ -4,8 +4,9 @@ package account
 import (
 	"context"
 	"encoding/binary"
-	"encoding/hex"
 	"encoding/json"
+	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -28,8 +29,6 @@ import (
 
 const (
 	maxAccountCache = 1000
-	//ContractAccount is internal account
-	ContractAccount = "Contract"
 	aliasPrefix     = "ALI:"
 	accountPrefix   = "ACC:"
 	accountCPPrefix = "ACP:"
@@ -48,8 +47,15 @@ func aliasKey(name string) []byte {
 	return []byte(aliasPrefix + name)
 }
 
-func indexKey(xpub chainkd.XPub) []byte {
-	return []byte(indexPrefix + xpub.String())
+func indexKeys(xpubs []chainkd.XPub) []byte {
+	xpubStrings := make([]string, len(xpubs))
+	for i, xpub := range xpubs {
+		xpubStrings[i] = xpub.String()
+	}
+	sort.Strings(xpubStrings)
+	suffix := strings.Join(xpubStrings, "")
+
+	return []byte(indexPrefix + suffix)
 }
 
 //Key account store prefix
@@ -60,6 +66,17 @@ func Key(name string) []byte {
 //CPKey account control promgram store prefix
 func CPKey(hash common.Hash) []byte {
 	return append([]byte(accountCPPrefix), hash[:]...)
+}
+
+func convertUnit64ToBytes(nextIndex uint64) []byte {
+	buf := make([]byte, 8)
+	binary.PutUvarint(buf, nextIndex)
+	return buf
+}
+
+func convertBytesToUint64(rawIndex []byte) uint64 {
+	result, _ := binary.Uvarint(rawIndex)
+	return result
 }
 
 // NewManager creates a new account manager
@@ -121,15 +138,13 @@ type Account struct {
 func (m *Manager) getNextAccountIndex(xpubs []chainkd.XPub) (*uint64, error) {
 	m.accIndexMu.Lock()
 	defer m.accIndexMu.Unlock()
-	var nextIndex uint64 = 1
 
-	if rawIndex := m.db.Get(indexKey(xpubs[0])); rawIndex != nil {
-		nextIndex = binary.LittleEndian.Uint64(rawIndex) + 1
+	var nextIndex uint64 = 1
+	if rawIndexBytes := m.db.Get(indexKeys(xpubs)); rawIndexBytes != nil {
+		nextIndex = convertBytesToUint64(rawIndexBytes) + 1
 	}
 
-	buf := make([]byte, 8)
-	binary.LittleEndian.PutUint64(buf, nextIndex)
-	m.db.Set(indexKey(xpubs[0]), buf)
+	m.db.Set(indexKeys(xpubs), convertUnit64ToBytes(nextIndex))
 
 	return &nextIndex, nil
 }
@@ -238,11 +253,6 @@ func (m *Manager) findByID(ctx context.Context, id string) (*Account, error) {
 func (m *Manager) GetAliasByID(id string) string {
 	account := &Account{}
 
-	//smart contract account
-	if id == ContractAccount {
-		return ContractAccount
-	}
-
 	rawAccount := m.db.Get(Key(id))
 	if rawAccount == nil {
 		log.Warn("fail to find account")
@@ -347,7 +357,6 @@ type CtrlProgram struct {
 	KeyIndex       uint64
 	ControlProgram []byte
 	Change         bool
-	ExtContractTag bool
 }
 
 func (m *Manager) insertAccountControlProgram(ctx context.Context, progs ...*CtrlProgram) error {
@@ -390,7 +399,7 @@ func (m *Manager) nextIndex(account *Account) uint64 {
 	m.acpMu.Lock()
 	defer m.acpMu.Unlock()
 
-	key := make([]byte, 0)
+	var key []byte
 	key = append(key, account.Signer.XPubs[0].Bytes()...)
 
 	accountIndex := make([]byte, 8)
@@ -464,21 +473,4 @@ func (m *Manager) createPubkey(ctx context.Context, accountID string) (rootXPub 
 	pubkey = derivedXPub.PublicKey()
 
 	return rootXPub, pubkey, path, nil
-}
-
-// CreateContractHook generate a extend contract program for an account
-func (m *Manager) CreateContractHook(ctx context.Context, accountID string, contractProgram string) ([]byte, error) {
-	contract, err := hex.DecodeString(contractProgram)
-	if err != nil {
-		return nil, err
-	}
-
-	cp := &CtrlProgram{
-		AccountID:      ContractAccount,
-		ControlProgram: contract,
-		Change:         false,
-		ExtContractTag: true,
-	}
-
-	return cp.ControlProgram, nil
 }

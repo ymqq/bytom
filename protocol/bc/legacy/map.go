@@ -233,8 +233,7 @@ func mapTx(tx *TxData) (headerID bc.Hash, hdr *bc.TxHeader, entryMap map[bc.Hash
 		mux.WitnessDestinations = append(mux.WitnessDestinations, dest)
 	}
 
-	refdatahash := hashData(tx.ReferenceData)
-	h := bc.NewTxHeader(tx.Version, tx.SerializedSize, tx.TimeRange, resultIDs, &refdatahash)
+	h := bc.NewTxHeader(tx.Version, tx.SerializedSize, tx.TimeRange, resultIDs)
 	headerID = addEntry(h)
 
 	return headerID, h, entryMap
@@ -255,7 +254,6 @@ func MapBlock(old *Block) *bc.Block {
 	b.ID, b.BlockHeader = mapBlockHeader(&old.BlockHeader)
 	for _, oldTx := range old.Transactions {
 		b.Transactions = append(b.Transactions, oldTx.Tx)
-		b.BlockHeader.SerializedSize += oldTx.TxData.SerializedSize
 	}
 	return b
 }

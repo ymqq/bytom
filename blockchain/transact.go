@@ -38,10 +38,6 @@ func (bcr *BlockchainReactor) actionDecoder(action string) (func([]byte) (txbuil
 		decoder = bcr.accounts.DecodeSpendAction
 	case "spend_account_unspent_output":
 		decoder = bcr.accounts.DecodeSpendUTXOAction
-	case "spend_contract_unspent_output":
-		decoder = bcr.accounts.DecodeSpendSUTXOAction
-	case "set_transaction_reference_data":
-		decoder = txbuilder.DecodeSetTxRefDataAction
 	default:
 		return nil, false
 	}
@@ -158,16 +154,6 @@ func (bcr *BlockchainReactor) build(ctx context.Context, buildReqs *BuildRequest
 func (bcr *BlockchainReactor) lockContractTX(ctx context.Context, buildReqs *BuildRequest) Response {
 	subctx := reqid.NewSubContext(ctx, reqid.New())
 
-	accountID, contractProg, err := bcr.getContractAccountID(ctx, buildReqs)
-	if err != nil {
-		return NewErrorResponse(err)
-	}
-
-	// establish an association between account and contract
-	if _, err = bcr.accounts.CreateContractHook(ctx, accountID, contractProg); err != nil {
-		return NewErrorResponse(err)
-	}
-
 	tmpl, err := bcr.buildSingle(subctx, buildReqs)
 	if err != nil {
 		return NewErrorResponse(err)
@@ -210,9 +196,6 @@ func (bcr *BlockchainReactor) submitSingle(ctx context.Context, tpl *txbuilder.T
 		return nil, errors.Wrap(txbuilder.ErrMissingRawTx)
 	}
 
-	if err := txbuilder.MaterializeWitnesses(tpl); err != nil {
-		return nil, err
-	}
 	if err := txbuilder.FinalizeTx(ctx, bcr.chain, tpl.Transaction); err != nil {
 		return nil, errors.Wrapf(err, "tx %s", tpl.Transaction.ID.String())
 	}

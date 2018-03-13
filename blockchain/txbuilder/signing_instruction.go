@@ -96,7 +96,7 @@ type witnessComponent interface {
 	materialize(*[][]byte) error
 }
 
-//UnmarshalJSON unmarshal SigningInstruction
+// UnmarshalJSON unmarshal SigningInstruction
 func (si *SigningInstruction) UnmarshalJSON(b []byte) error {
 	var pre struct {
 		Position          uint32            `json:"position"`

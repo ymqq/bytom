@@ -6,7 +6,7 @@ import (
 	chainjson "github.com/bytom/encoding/json"
 )
 
-//DataWitness used sign transaction
+// DataWitness used sign transaction
 type DataWitness chainjson.HexBytes
 
 func (dw DataWitness) materialize(args *[][]byte) error {
@@ -14,7 +14,7 @@ func (dw DataWitness) materialize(args *[][]byte) error {
 	return nil
 }
 
-//MarshalJSON marshal DataWitness
+// MarshalJSON marshal DataWitness
 func (dw DataWitness) MarshalJSON() ([]byte, error) {
 	x := struct {
 		Type  string             `json:"type"`
