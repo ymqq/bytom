@@ -7,6 +7,7 @@ import (
 
 	"github.com/bytom/blockchain/txdb"
 	"github.com/bytom/blockchain/txdb/storage"
+	"github.com/bytom/consensus"
 	"github.com/bytom/errors"
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/legacy"
@@ -35,10 +36,12 @@ type Store interface {
 	GetBlock(*bc.Hash) (*legacy.Block, error)
 	GetMainchain(*bc.Hash) (map[uint64]*bc.Hash, error)
 	GetStoreStatus() txdb.BlockStoreStateJSON
+	GetSeed(*bc.Hash) (*bc.Hash, error)
+	GetTransactionStatus(*bc.Hash) (*bc.TransactionStatus, error)
 	GetTransactionsUtxo(*state.UtxoViewpoint, []*bc.Tx) error
 	GetUtxo(*bc.Hash) (*storage.UtxoEntry, error)
 
-	SaveBlock(*legacy.Block) error
+	SaveBlock(*legacy.Block, *bc.TransactionStatus, *bc.Hash) error
 	SaveChainStatus(*legacy.Block, *state.UtxoViewpoint, map[uint64]*bc.Hash) error
 }
 
@@ -196,7 +199,7 @@ func (c *Chain) InMainChain(height uint64, hash bc.Hash) bool {
 	return *h == hash
 }
 
-// TimestampMS returns the latest known block timestamp.
+// Timestamp returns the latest known block timestamp.
 func (c *Chain) Timestamp() uint64 {
 	c.state.cond.L.Lock()
 	defer c.state.cond.L.Unlock()
@@ -216,6 +219,21 @@ func (c *Chain) BestBlock() *legacy.Block {
 // GetUtxo try to find the utxo status in db
 func (c *Chain) GetUtxo(hash *bc.Hash) (*storage.UtxoEntry, error) {
 	return c.store.GetUtxo(hash)
+}
+
+// GetSeed return the seed for the given block
+func (c *Chain) GetSeed(height uint64, preBlock *bc.Hash) (*bc.Hash, error) {
+	if height == 0 {
+		return consensus.InitialSeed, nil
+	} else if height%consensus.SeedPerRetarget == 0 {
+		return preBlock, nil
+	}
+	return c.store.GetSeed(preBlock)
+}
+
+// GetTransactionStatus return the transaction status of give block
+func (c *Chain) GetTransactionStatus(hash *bc.Hash) (*bc.TransactionStatus, error) {
+	return c.store.GetTransactionStatus(hash)
 }
 
 // GetTransactionsUtxo return all the utxos that related to the txs' inputs
