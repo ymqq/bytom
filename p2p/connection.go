@@ -377,6 +377,7 @@ func (c *MConnection) sendMsgPacket() bool {
 			leastRatio = ratio
 			leastChannel = channel
 		}
+		log.Info("=====channel:", channel.id, " size:", channel.sendQueueSize, " chan cap:", len(channel.sendQueue), " recent sent:", channel.recentlySent, " priority:", channel.priority)
 	}
 
 	// Nothing to send?
