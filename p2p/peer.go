@@ -213,7 +213,9 @@ func (p *Peer) OnStart() error {
 // OnStop implements BaseService.
 func (p *Peer) OnStop() {
 	p.BaseService.OnStop()
+	log.Info("p mconn Stop start")
 	p.mconn.Stop()
+	log.Info("p mconn stop complete")
 }
 
 // Connection returns underlying MConnection.

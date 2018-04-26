@@ -85,6 +85,7 @@ type Switch struct {
 	bannedPeer   map[string]time.Time
 	db           dbm.DB
 	mtx          sync.Mutex
+	peerStopMu   sync.Mutex
 
 	filterConnByAddr   func(net.Addr) error
 	filterConnByPubKey func(crypto.PubKeyEd25519) error
@@ -490,7 +491,11 @@ func (sw *Switch) stopAndRemovePeer(peer *Peer, reason interface{}) {
 		reactor.RemovePeer(peer, reason)
 	}
 	sw.peers.Remove(peer)
+	log.Info("Del peer from switch.")
+	sw.peerStopMu.Lock()
+	defer sw.peerStopMu.Unlock()
 	peer.Stop()
+	log.Info("Peer connection is closed.")
 }
 
 func (sw *Switch) listenerRoutine(l Listener) {
