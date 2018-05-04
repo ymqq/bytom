@@ -5,7 +5,6 @@ import (
 	"runtime"
 	"testing"
 	"time"
-	"runtime"
 
 	"github.com/bytom/protocol/bc"
 )
