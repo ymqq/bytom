@@ -26,7 +26,7 @@ var (
 
 // do proof of work
 func doWork(bh *types.BlockHeader, seed *bc.Hash) bool {
-	log.Println("Start from nonce:", lastNonce+1)
+	log.Println("Start from nonce:\t", lastNonce+1)
 	for i := uint64(lastNonce + 1); i <= uint64(lastNonce+consensus.TargetSecondsPerBlock*esHR) && i <= maxNonce; i++ {
 		bh.Nonce = i
 		// log.Printf("nonce = %v\n", i)
@@ -36,7 +36,7 @@ func doWork(bh *types.BlockHeader, seed *bc.Hash) bool {
 			return true
 		}
 	}
-	log.Println("Stop at nonce:", bh.Nonce)
+	log.Println("Stop at nonce:\t", bh.Nonce)
 	lastNonce = bh.Nonce
 	return false
 }
@@ -79,7 +79,7 @@ func main() {
 			log.Fatalln(err)
 		}
 
-		log.Println("Mining at height:", resp.BlockHeader.Height)
+		log.Println("Mining at height:\t", resp.BlockHeader.Height)
 		if lastHeight != resp.BlockHeader.Height {
 			lastNonce = ^uint64(0)
 		}

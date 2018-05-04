@@ -8,15 +8,14 @@ else
 endif
 
 test: cSimdTs.o
-	rm -rf ../*.go
-	cp *.go ../
 	cd .. && go test -v && go test -bench=.
 	rm *.o
-	rm -rf ../*.go
-	cp ../legacy/*.go ../
+
+all: cSimdTs.o
 
 %.o: %.cpp
 	$(CC) -o $@ -c $^ -std=c++11 -pthread -mavx2 -O3 -fopenmp
 
 clean:
 	rm -f *.o *.so *.a
+	

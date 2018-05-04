@@ -1,6 +1,16 @@
 package tensority
 
+// #cgo !darwin CFLAGS: -I.
+// #cgo !darwin LDFLAGS: -L./lib/ -l:cSimdTs.o -lstdc++ -lgomp
+// #cgo darwin CFLAGS: -I. -I/usr/local/opt/llvm/include
+// #cgo darwin LDFLAGS: -L./lib/ -lcSimdTs.o -lstdc++ -lomp -L/usr/local/opt/llvm/lib
+// #include "./lib/cSimdTs.h"
+import "C"
+
 import (
+	"runtime"
+	"unsafe"
+
 	"github.com/golang/groupcache/lru"
 
 	"github.com/bytom/crypto/sha3pool"
@@ -9,10 +19,33 @@ import (
 
 const maxAIHashCached = 64
 
-func algorithm(hash, seed *bc.Hash) *bc.Hash {
+func legacyAlgorithm(hash, seed *bc.Hash) *bc.Hash {
 	cache := calcSeedCache(seed.Bytes())
 	data := mulMatrix(hash.Bytes(), cache)
 	return hashMatrix(data)
+}
+
+func cgoAlgorithm(blockHeader, seed *bc.Hash) *bc.Hash {
+	bhBytes := blockHeader.Bytes()
+	sdBytes := seed.Bytes()
+
+	// Get the array pointers from the corresponding slices
+	bhPtr := (*C.uchar)(unsafe.Pointer(&bhBytes[0]))
+	seedPtr := (*C.uchar)(unsafe.Pointer(&sdBytes[0]))
+
+	resPtr := C.SimdTs(bhPtr, seedPtr)
+
+	res := bc.NewHash(*(*[32]byte)(unsafe.Pointer(resPtr)))
+	return &res
+}
+
+
+func algorithm(hash, seed *bc.Hash) *bc.Hash {
+	if runtime.GOOS == "windows" || runtime.GOOS == "linux" || (runtime.GOOS == "darwin" && runtime.GOARCH == "amd64") {
+		return cgoAlgorithm(hash, seed)
+	} else {
+		return legacyAlgorithm(hash, seed)
+	}
 }
 
 func calcCacheKey(hash, seed *bc.Hash) *bc.Hash {

@@ -2,11 +2,11 @@ package tensority
 
 import (
 	"reflect"
-	"runtime"
-	"sync"
+	// "runtime"
+	// "sync"
 	"unsafe"
 
-	"gonum.org/v1/gonum/mat"
+	// "gonum.org/v1/gonum/mat"
 
 	"github.com/bytom/crypto/sha3pool"
 	"github.com/bytom/protocol/bc"
@@ -31,72 +31,72 @@ func mulMatrix(headerhash []byte, cache []uint32) []uint8 {
 	header := *(*reflect.SliceHeader)(unsafe.Pointer(&ui32data))
 	header.Len *= 4
 	header.Cap *= 4
-	i8data := *(*[]int8)(unsafe.Pointer(&header))
+	// i8data := *(*[]int8)(unsafe.Pointer(&header))
 
-	f64data := make([]float64, matNum*matSize*matSize)
-	for i := 0; i < matNum*matSize*matSize; i++ {
-		f64data[i] = float64(i8data[i])
-	}
+	// f64data := make([]float64, matNum*matSize*matSize)
+	// for i := 0; i < matNum*matSize*matSize; i++ {
+	// 	f64data[i] = float64(i8data[i])
+	// }
 
-	dataIdentity := make([]float64, matSize*matSize)
-	for i := 0; i < 256; i++ {
-		dataIdentity[i*257] = float64(1)
-	}
+	// dataIdentity := make([]float64, matSize*matSize)
+	// for i := 0; i < 256; i++ {
+	// 	dataIdentity[i*257] = float64(1)
+	// }
 
 	var tmp [matSize][matSize]float64
-	var maArr [4][matSize][matSize]float64
+	// var maArr [4][matSize][matSize]float64
 
-	runtime.GOMAXPROCS(4)
-	var wg sync.WaitGroup
-	wg.Add(4)
+	// runtime.GOMAXPROCS(4)
+	// var wg sync.WaitGroup
+	// wg.Add(4)
 
-	for k := 0; k < 4; k++ {
-		go func(i int) {
-			defer wg.Done()
+	// for k := 0; k < 4; k++ {
+	// 	go func(i int) {
+	// 		defer wg.Done()
 
-			ma := mat.NewDense(matSize, matSize, dataIdentity)
-			mc := mat.NewDense(matSize, matSize, make([]float64, matSize*matSize))
+	// 		ma := mat.NewDense(matSize, matSize, dataIdentity)
+	// 		mc := mat.NewDense(matSize, matSize, make([]float64, matSize*matSize))
 
-			var sequence [32]byte
-			sha3pool.Sum256(sequence[:], headerhash[i*8:(i+1)*8])
+	// 		var sequence [32]byte
+	// 		sha3pool.Sum256(sequence[:], headerhash[i*8:(i+1)*8])
 
-			for j := 0; j < 2; j++ {
-				for k := 0; k < 32; k++ {
-					index := int(sequence[k])
-					mb := mat.NewDense(matSize, matSize, f64data[index*matSize*matSize:(index+1)*matSize*matSize])
-					mc.Mul(ma, mb.T())
+	// 		for j := 0; j < 2; j++ {
+	// 			for k := 0; k < 32; k++ {
+	// 				index := int(sequence[k])
+	// 				mb := mat.NewDense(matSize, matSize, f64data[index*matSize*matSize:(index+1)*matSize*matSize])
+	// 				mc.Mul(ma, mb.T())
 
-					for row := 0; row < matSize; row++ {
-						for col := 0; col < matSize; col++ {
-							i32v := int32(mc.At(row, col))
-							i8v := int8((i32v & 0xff) +
-								((i32v >> 8) & 0xff))
-							mc.Set(row, col, float64(i8v))
-						}
-					}
-					ma = mc
-				}
-			}
+	// 				for row := 0; row < matSize; row++ {
+	// 					for col := 0; col < matSize; col++ {
+	// 						i32v := int32(mc.At(row, col))
+	// 						i8v := int8((i32v & 0xff) +
+	// 							((i32v >> 8) & 0xff))
+	// 						mc.Set(row, col, float64(i8v))
+	// 					}
+	// 				}
+	// 				ma = mc
+	// 			}
+	// 		}
 
-			for row := 0; row < matSize; row++ {
-				for col := 0; col < matSize; col++ {
-					maArr[i][row][col] = ma.At(row, col)
-				}
-			}
-		}(k)
-	}
-	wg.Wait()
+	// 		for row := 0; row < matSize; row++ {
+	// 			for col := 0; col < matSize; col++ {
+	// 				maArr[i][row][col] = ma.At(row, col)
+	// 			}
+	// 		}
+	// 	}(k)
+	// }
+	// wg.Wait()
 
-	for i := 0; i < 4; i++ {
-		for row := 0; row < matSize; row++ {
-			for col := 0; col < matSize; col++ {
-				i32vtmp := int32(tmp[row][col])
-				i32vma := int32(maArr[i][row][col])
-				i8v := int8(int32(i32vtmp+i32vma) & 0xff)
-				tmp[row][col] = float64(i8v)
-			}
-		}
-	}
+	// for i := 0; i < 4; i++ {
+	// 	for row := 0; row < matSize; row++ {
+	// 		for col := 0; col < matSize; col++ {
+	// 			i32vtmp := int32(tmp[row][col])
+	// 			i32vma := int32(maArr[i][row][col])
+	// 			i8v := int8(int32(i32vtmp+i32vma) & 0xff)
+	// 			tmp[row][col] = float64(i8v)
+	// 		}
+	// 	}
+	// }
 
 	result := make([]uint8, 0)
 	for i := 0; i < matSize; i++ {

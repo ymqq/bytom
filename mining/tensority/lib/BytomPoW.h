@@ -12,7 +12,6 @@
 #include <x86intrin.h>
 #include <omp.h>
 
-
 #define FNV(v1,v2) int32_t( ((v1)*FNV_PRIME) ^ (v2) )
 const int FNV_PRIME = 0x01000193;
 
