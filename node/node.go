@@ -149,8 +149,8 @@ func initActiveNetParams(config *cfg.Config) {
 	}
 }
 
-// Lanch web broser or not
-func lanchWebBroser() {
+// Launch web browser or not
+func launchWebBrowser() {
 	log.Info("Launching System Browser with :", webAddress)
 	if err := browser.Open(webAddress); err != nil {
 		log.Error(err.Error())
@@ -170,10 +170,12 @@ func (n *Node) OnStart() error {
 	if n.miningEnable {
 		n.cpuMiner.Start()
 	}
-	n.syncManager.Start()
+	if !n.config.VaultMode {
+		n.syncManager.Start()
+	}
 	n.initAndstartApiServer()
 	if !n.config.Web.Closed {
-		lanchWebBroser()
+		launchWebBrowser()
 	}
 
 	return nil
@@ -184,9 +186,9 @@ func (n *Node) OnStop() {
 	if n.miningEnable {
 		n.cpuMiner.Stop()
 	}
-	n.syncManager.Stop()
-	log.Info("Stopping Node")
-	// TODO: gracefully disconnect from peers.
+	if !n.config.VaultMode {
+		n.syncManager.Stop()
+	}
 }
 
 func (n *Node) RunForever() {

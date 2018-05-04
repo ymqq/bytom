@@ -2,6 +2,7 @@ package tensority
 
 import (
 	"reflect"
+	"runtime"
 	"testing"
 	"time"
 	"runtime"
@@ -267,7 +268,7 @@ func BenchmarkAlgorithm(b *testing.B) {
 	bhhash := bc.NewHash(tests[0].blockHeader)
 	sdhash := bc.NewHash(tests[0].seed)
 	b.ResetTimer()
-	for i:=0 ; i<b.N ; i++ {
+	for i := 0; i < b.N; i++ {
 		algorithm(&bhhash, &sdhash)
 	}
 }
@@ -275,11 +276,11 @@ func BenchmarkAlgorithm(b *testing.B) {
 func BenchmarkAlgorithmParallel(b *testing.B) {
 	bhhash := bc.NewHash(tests[0].blockHeader)
 	sdhash := bc.NewHash(tests[0].seed)
-	
+
 	b.SetParallelism(runtime.NumCPU())
-    b.RunParallel(func(pb *testing.PB) {
+	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			algorithm(&bhhash, &sdhash)
-	    }
-    })
+		}
+	})
 }
