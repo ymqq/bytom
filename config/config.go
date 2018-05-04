@@ -16,6 +16,7 @@ type Config struct {
 	Wallet *WalletConfig  `mapstructure:"wallet"`
 	Auth   *RPCAuthConfig `mapstructure:"auth"`
 	Web    *WebConfig     `mapstructure:"web"`
+	Simd    *SimdConfig   `mapstructure:"simd"`
 }
 
 // Default configurable parameters.
@@ -26,6 +27,7 @@ func DefaultConfig() *Config {
 		Wallet:     DefaultWalletConfig(),
 		Auth:       DefaultRPCAuthConfig(),
 		Web:        DefaultWebConfig(),
+		Simd:       DefaultSimdConfig(),
 	}
 }
 
@@ -155,6 +157,10 @@ type WebConfig struct {
 	Closed bool `mapstructure:"closed"`
 }
 
+type SimdConfig struct {
+	Enable bool `mapstructure:"enable"`
+}
+
 // Default configurable rpc's auth parameters.
 func DefaultRPCAuthConfig() *RPCAuthConfig {
 	return &RPCAuthConfig{
@@ -173,6 +179,13 @@ func DefaultWebConfig() *WebConfig {
 func DefaultWalletConfig() *WalletConfig {
 	return &WalletConfig{
 		Disable: false,
+	}
+}
+
+// Default configurable web parameters.
+func DefaultSimdConfig() *SimdConfig {
+	return &SimdConfig{
+		Enable: false,
 	}
 }
 
