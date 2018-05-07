@@ -96,14 +96,7 @@ clean:
 	@rm -rf target
 	@rm -rf cmd/bytomcli/bytomcli
 	@rm -rf cmd/miner/miner
-	@rm -rf cmd/miner/*.dylib
 	@rm -rf cmd/bytomd/bytomd
-	@rm -rf cmd/bytomd/*.dylib
-	@rm -rf mining/tensority/*.dylib
-	@rm -rf mining/tensority/dylib/*.dylib
-	@rm -rf mining/tensority/stlib/*.o
-	@rm -f mining/tensority/*.go
-	@cp mining/tensority/legacy/*.go mining/tensority/
 
 target/$(BYTOMD_BINARY32):
 	CGO_ENABLED=0 GOARCH=386 go build $(BUILD_FLAGS) -o $@ cmd/bytomd/main.go
