@@ -197,9 +197,9 @@ func (sw *Switch) OnStart() error {
 		sw.startInitPeer(peer)
 	}
 	// Start listeners
-	for _, listener := range sw.listeners {
-		go sw.listenerRoutine(listener)
-	}
+	//for _, listener := range sw.listeners {
+	//	go sw.listenerRoutine(listener)
+	//}
 	return nil
 }
 

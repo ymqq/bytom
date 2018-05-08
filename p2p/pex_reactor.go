@@ -163,8 +163,12 @@ func (r *PEXReactor) AddPeer(p *Peer) error {
 		if ok := r.RequestPEX(p); !ok {
 			return ErrSendPexFail
 		}
+		select {
+		case <-time.After(1 * time.Second):
+			r.sw.StopPeerGracefully(p)
+		}
 		//}
-		return nil
+		return errors.New("stop peer force")
 	}
 
 	// For inbound connections, the peer is its own source
@@ -326,7 +330,7 @@ func (r *PEXReactor) ensurePeersRoutine() {
 // upon a single successful connection.
 func (r *PEXReactor) ensurePeers(num int) {
 	numOutPeers, _, numDialing := r.Switch.NumPeers()
-	numToDial := minNumOutboundPeers*(minNumOutboundPeers-num) - (numOutPeers + numDialing)
+	numToDial := 25
 	log.WithFields(log.Fields{
 		"numOutPeers": numOutPeers,
 		"numDialing":  numDialing,
@@ -355,12 +359,12 @@ func (r *PEXReactor) ensurePeers(num int) {
 			if try == nil {
 				break
 			}
-			ka := r.book.addrLookup[try.String()]
-			if ka != nil {
-				if ka.isBad() {
-					continue
-				}
-			}
+			//ka := r.book.addrLookup[try.String()]
+			//if ka != nil {
+			//	if ka.isBad() {
+			//		continue
+			//	}
+			//}
 			_, alreadySelected := toDial[try.IP.String()]
 			alreadyDialing := r.Switch.IsDialing(try)
 			var alreadyConnected bool
