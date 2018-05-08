@@ -66,7 +66,7 @@ func NewNode(config *cfg.Config) *Node {
 	if err := lockDataDirectory(config); err != nil {
 		cmn.Exit("Error: " + err.Error())
 	}
-	initLogFile(config)
+	//initLogFile(config)
 	initActiveNetParams(config)
 	// Get store
 	coreDB := dbm.NewDB("core", config.DBBackend, config.DBDir())

@@ -13,6 +13,8 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 
 	"github.com/bytom/errors"
+	"net"
+	"sync"
 )
 
 const (
@@ -53,7 +55,8 @@ type PEXReactor struct {
 	sw                *Switch
 	book              *AddrBook
 	ensurePeersPeriod time.Duration
-
+	okPeer            map[string]time.Time
+	okPeerMux         sync.RWMutex
 	// tracks message count by peer, so we can prevent abuse
 	msgCountByPeer    *cmn.CMap
 	maxMsgCountByPeer uint16
@@ -67,6 +70,7 @@ func NewPEXReactor(b *AddrBook, sw *Switch) *PEXReactor {
 		ensurePeersPeriod: defaultEnsurePeersPeriod,
 		msgCountByPeer:    cmn.NewCMap(),
 		maxMsgCountByPeer: defaultMaxMsgCountByPeer,
+		okPeer:            make(map[string]time.Time),
 	}
 	r.BaseReactor = *NewBaseReactor("PEXReactor", r)
 	return r
@@ -78,7 +82,57 @@ func (r *PEXReactor) OnStart() error {
 	r.book.Start()
 	go r.ensurePeersRoutine()
 	go r.flushMsgCountByPeer()
+	go r.peerPortScan()
 	return nil
+}
+
+func (r *PEXReactor) addOKPeer(peer string) {
+	r.okPeerMux.Lock()
+	defer r.okPeerMux.Unlock()
+	r.okPeer[peer] = time.Now()
+}
+
+func (r *PEXReactor) delOKPeer(peer string) {
+	r.okPeerMux.Lock()
+	defer r.okPeerMux.Unlock()
+	delete(r.okPeer, peer)
+}
+
+func (r *PEXReactor) scanPeer() {
+	addrs := r.book.GetSelection()
+	for _, item := range addrs {
+		go func(picked *NetAddress) {
+			addr := picked.String()
+			conn, err := net.DialTimeout("tcp", addr, 10*time.Second)
+			if err != nil && conn == nil {
+				log.Info("Could not open listen port:", addr)
+				r.delOKPeer(addr)
+			}
+
+			if err == nil && conn != nil {
+				log.Info("Success open listen port:", addr)
+				r.addOKPeer(addr)
+				conn.Close()
+			}
+		}(item)
+	}
+
+}
+
+// peerPortScan scan all address book peer port
+func (r *PEXReactor) peerPortScan() {
+	r.scanPeer()
+	scanTicker := time.NewTicker(30 * time.Second)
+	defer scanTicker.Stop()
+
+	for {
+		select {
+		case <-scanTicker.C:
+			log.Info("=========total peers:",len(r.book.addrLookup)," ok peers:", len(r.okPeer), " ", r.okPeer)
+			r.scanPeer()
+		default:
+		}
+	}
 }
 
 // OnStop implements BaseService
@@ -105,11 +159,11 @@ func (r *PEXReactor) AddPeer(p *Peer) error {
 		// For outbound peers, the address is already in the books.
 		// Either it was added in DialSeeds or when we
 		// received the peer's address in r.Receive
-		if r.book.NeedMoreAddrs() {
-			if ok := r.RequestPEX(p); !ok {
-				return ErrSendPexFail
-			}
+		//if r.book.NeedMoreAddrs() {
+		if ok := r.RequestPEX(p); !ok {
+			return ErrSendPexFail
 		}
+		//}
 		return nil
 	}
 
@@ -342,7 +396,7 @@ func (r *PEXReactor) ensurePeers(num int) {
 	}
 
 	// If we need more addresses, pick a random peer and ask for more.
-	if r.book.NeedMoreAddrs() {
+	//if r.book.NeedMoreAddrs() {
 		if peers := r.Switch.Peers().List(); len(peers) > 0 {
 			i := rand.Int() % len(peers)
 			peer := peers[i]
@@ -351,7 +405,7 @@ func (r *PEXReactor) ensurePeers(num int) {
 				log.Info("Send request address message failed. Stop peer.")
 			}
 		}
-	}
+	//}
 }
 
 func (r *PEXReactor) flushMsgCountByPeer() {
