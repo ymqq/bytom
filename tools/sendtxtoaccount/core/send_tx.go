@@ -71,24 +71,15 @@ func SendReq(method string, args []string, recvAccount []accountInfo) (interface
 			fmt.Println("generate build mul tx is error: ", err)
 			os.Exit(util.ErrLocalExe)
 		}
-		fileName := "build_tx_" + strconv.Itoa(index) + ".txt"
-		outputFile, outputError := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
-		if outputError != nil {
-			fmt.Println("Failed to open file:", fileName, ",Please check the file.If it exists, please backup.")
-			return "", false
-		}
-		defer outputFile.Close()
-		outputWriter := bufio.NewWriter(outputFile)
+
 		rawData, err := json.MarshalIndent(&ins, "", "  ")
 		if err != nil {
 			fmt.Println("Json format error!!!!!")
 			os.Exit(1)
 		}
-		outputWriter.WriteString(string(rawData))
-		outputWriter.Flush()
+
 		fmt.Println(string(rawData))
 		fmt.Println("The total number of btm[neu]:", bmtTotalAmount)
-		fmt.Println("Please check the above data or file:[", fileName, "] data")
 		param = ins
 		methodPath = "/build-transaction"
 
@@ -144,6 +135,27 @@ func Sendtx(sendAcct string, sendasset string, recvAccount []accountInfo) {
 	if !b {
 		fmt.Println("BuildMulTx fail!")
 		os.Exit(1)
+	}
+	{
+		fileName := "build_tx_" + strconv.Itoa(index) + ".txt"
+		outputFile, outputError := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
+		if outputError != nil {
+			fmt.Println("Failed to open file:", fileName, ",Please check the file.If it exists, please backup.")
+			os.Exit(1)
+		}
+		defer outputFile.Close()
+		outputWriter := bufio.NewWriter(outputFile)
+		dataMap, _ := resp.(map[string]interface{})
+		rawData, _ := json.MarshalIndent(dataMap, "", "  ")
+		outputWriter.WriteString(string(rawData))
+		outputWriter.Flush()
+		fmt.Println("\n\n", string(rawData), "\n")
+		fmt.Println("Please check the above data or file:[", fileName, "] data")
+
+	}
+	if cfg.OnlyBuildTx {
+		index += 1
+		return
 	}
 	rawTemplate, _ := json.Marshal(resp)
 	reader := bufio.NewReader(os.Stdin)

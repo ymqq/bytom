@@ -14,10 +14,11 @@ import (
 )
 
 type config struct {
-	SendAcct  string `toml:"send_acct_id"`
-	Sendasset string `toml:"send_asset_id"`
-	BtmGas    uint64 `toml:"btm_gas"`
-	OutputNum int    `toml:"output_num"`
+	SendAcct    string `toml:"send_acct_id"`
+	Sendasset   string `toml:"send_asset_id"`
+	BtmGas      uint64 `toml:"btm_gas"`
+	OutputNum   int    `toml:"output_num"`
+	OnlyBuildTx bool   `toml:"only_build_tx"`
 }
 
 func init() {
