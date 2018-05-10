@@ -1,4 +1,5 @@
-send_acct_id = "0D54P0N5G0A02"
+send_acct_id = "0DKJF840G0A02"
 send_asset_id = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
-btm_gas=0.4
-output_num=60
+btm_gas=40000000
+output_num=2
+only_build_tx=true
