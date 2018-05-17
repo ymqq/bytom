@@ -47,6 +47,7 @@ func ClientCall(path string, req ...interface{}) (interface{}, int) {
 	client.Call(context.Background(), path, request, response)
 	switch response.Status {
 	case api.FAIL:
+		jww.ERROR.Println(response.Msg)
 		return nil, ErrRemote
 	case "":
 		jww.ERROR.Println("Unable to connect to the bytomd")

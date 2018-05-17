@@ -11,7 +11,6 @@ import (
 	"github.com/bytom/api"
 	"github.com/bytom/blockchain/txbuilder"
 	"github.com/bytom/protocol/bc/types"
-	"github.com/bytom/util"
 )
 
 const (
@@ -69,7 +68,7 @@ func SendReq(method string, args []string, recvAccount []accountInfo) (interface
 		var ins api.BuildRequest
 		if err := json.Unmarshal([]byte(buildReqStr), &ins); err != nil {
 			fmt.Println("generate build mul tx is error: ", err)
-			os.Exit(util.ErrLocalExe)
+			os.Exit(ErrLocalExe)
 		}
 
 		rawData, err := json.MarshalIndent(&ins, "", "  ")
@@ -89,7 +88,7 @@ func SendReq(method string, args []string, recvAccount []accountInfo) (interface
 		err := json.Unmarshal([]byte(args[0]), &template)
 		if err != nil {
 			fmt.Println(err)
-			os.Exit(util.ErrLocalExe)
+			os.Exit(ErrLocalExe)
 		}
 		if len(password) == 0 {
 			fmt.Println("password is null")
@@ -107,8 +106,8 @@ func SendReq(method string, args []string, recvAccount []accountInfo) (interface
 		}{}
 		json.Unmarshal([]byte(args[0]), &ins)
 		methodPath = "/submit-transaction"
-		data, exitCode := util.ClientCall(methodPath, &ins)
-		if exitCode != util.Success {
+		data, exitCode := ClientCall(methodPath, &ins)
+		if exitCode != Success {
 			return "", false
 		}
 		return data, true
@@ -116,8 +115,8 @@ func SendReq(method string, args []string, recvAccount []accountInfo) (interface
 		fmt.Println("method is null")
 		os.Exit(1)
 	}
-	data, exitCode := util.ClientCall(methodPath, &param)
-	if exitCode != util.Success {
+	data, exitCode := ClientCall(methodPath, &param)
+	if exitCode != Success {
 		return "", false
 	}
 	return data, true
