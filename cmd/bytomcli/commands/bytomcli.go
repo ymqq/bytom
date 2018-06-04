@@ -115,6 +115,7 @@ func AddCommands() {
 	BytomcliCmd.AddCommand(deleteAccountCmd)
 	BytomcliCmd.AddCommand(listAccountsCmd)
 	BytomcliCmd.AddCommand(createAccountReceiverCmd)
+	BytomcliCmd.AddCommand(createAccountPubkeyCmd)
 	BytomcliCmd.AddCommand(listAddressesCmd)
 	BytomcliCmd.AddCommand(validateAddressCmd)
 
@@ -176,6 +177,7 @@ func AddTemplateFunc() {
 		listAccountsCmd.Name(),
 		deleteAccountCmd.Name(),
 		createAccountReceiverCmd.Name(),
+		createAccountPubkeyCmd.Name(),
 		listAddressesCmd.Name(),
 		validateAddressCmd.Name(),
 

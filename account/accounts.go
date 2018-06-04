@@ -17,6 +17,7 @@ import (
 	"github.com/bytom/common"
 	"github.com/bytom/consensus"
 	"github.com/bytom/crypto"
+	"github.com/bytom/crypto/ed25519"
 	"github.com/bytom/crypto/ed25519/chainkd"
 	"github.com/bytom/crypto/sha3pool"
 	"github.com/bytom/errors"
@@ -491,4 +492,20 @@ func (m *Manager) GetAccountByProgram(program *CtrlProgram) (*Account, error) {
 	}
 
 	return account, nil
+}
+
+// CreatePubkey generate an pubkey for the select account
+func (m *Manager) CreatePubkey(ctx context.Context, accountID string) (rootXPub chainkd.XPub, pubkey ed25519.PublicKey, path [][]byte, err error) {
+	account, err := m.FindByID(ctx, accountID)
+	if err != nil {
+		return chainkd.XPub{}, nil, nil, err
+	}
+
+	idx := m.getNextContractIndex(account.ID)
+	rootXPub = account.XPubs[0]
+	path = signers.Path(account.Signer, signers.AccountKeySpace, idx)
+	derivedXPub := rootXPub.Derive(path)
+	pubkey = derivedXPub.PublicKey()
+
+	return rootXPub, pubkey, path, nil
 }

@@ -117,6 +117,29 @@ var createAccountReceiverCmd = &cobra.Command{
 	},
 }
 
+var createAccountPubkeyCmd = &cobra.Command{
+	Use:   "create-account-pubkey <accountAlias> [accountID]",
+	Short: "Create an account pubkey",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		var ins = struct {
+			AccountID    string `json:"account_id"`
+			AccountAlias string `json:"account_alias"`
+		}{AccountAlias: args[0]}
+
+		if len(args) == 2 {
+			ins.AccountID = args[1]
+		}
+
+		data, exitCode := util.ClientCall("/create-account-pubkey", &ins)
+		if exitCode != util.Success {
+			os.Exit(exitCode)
+		}
+
+		printJSON(data)
+	},
+}
+
 var listAddressesCmd = &cobra.Command{
 	Use:   "list-addresses",
 	Short: "List the account addresses",
