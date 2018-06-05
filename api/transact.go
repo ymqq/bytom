@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/bytom/account"
+	"github.com/bytom/api/contract"
 	"github.com/bytom/blockchain/txbuilder"
 	"github.com/bytom/consensus"
 	"github.com/bytom/consensus/segwit"
@@ -122,6 +123,57 @@ func (a *API) build(ctx context.Context, buildReqs *BuildRequest) Response {
 
 	tmpl, err := a.buildSingle(subctx, buildReqs)
 	if err != nil {
+		return NewErrorResponse(err)
+	}
+
+	return NewSuccessResponse(tmpl)
+}
+
+// POST /lock-contract-transaction
+func (a *API) lockContractTX(ctx context.Context, buildReqs *BuildRequest) Response {
+	subctx := reqid.NewSubContext(ctx, reqid.New())
+
+	accoutID, prog, err := a.getContractAccountID(ctx, buildReqs)
+	if err != nil {
+		return NewErrorResponse(err)
+	}
+
+	// establish an association between account and contract
+	if _, err = a.wallet.AccountMgr.CreateContractHook(ctx, accoutID, prog); err != nil {
+		return NewErrorResponse(err)
+	}
+
+	tmpl, err := a.buildSingle(subctx, buildReqs)
+	if err != nil {
+		return NewErrorResponse(err)
+	}
+
+	return NewSuccessResponse(tmpl)
+}
+
+// POST /unlock-contract-transaction
+func (a *API) unlockContractTX(ctx context.Context, req *contract.ContractReq) Response {
+	act, err := req.ContractDecoder()
+	if err != nil {
+		return NewErrorResponse(err)
+	}
+
+	buildReqStr, err := act.Build()
+	if err != nil {
+		return NewErrorResponse(err)
+	}
+
+	var buildReq BuildRequest
+	if err := json.Unmarshal([]byte(buildReqStr), &buildReq); err != nil {
+		return NewErrorResponse(err)
+	}
+
+	tmpl, err := a.buildSingle(ctx, &buildReq)
+	if err != nil {
+		return NewErrorResponse(err)
+	}
+
+	if err = act.AddArgs(tmpl); err != nil {
 		return NewErrorResponse(err)
 	}
 

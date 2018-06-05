@@ -139,6 +139,9 @@ func AddCommands() {
 	BytomcliCmd.AddCommand(submitTransactionCmd)
 	BytomcliCmd.AddCommand(estimateTransactionGasCmd)
 
+	BytomcliCmd.AddCommand(lockContractTransactionCmd)
+	BytomcliCmd.AddCommand(unlockContractTransactionCmd)
+
 	BytomcliCmd.AddCommand(getBlockCountCmd)
 	BytomcliCmd.AddCommand(getBlockHashCmd)
 	BytomcliCmd.AddCommand(getBlockCmd)

@@ -24,6 +24,17 @@ func init() {
 	buildTransactionCmd.PersistentFlags().BoolVar(&pretty, "pretty", false, "pretty print json result")
 	buildTransactionCmd.PersistentFlags().BoolVar(&alias, "alias", false, "use alias build transaction")
 
+	lockContractTransactionCmd.PersistentFlags().StringVarP(&btmGas, "gas", "g", "20000000", "program of receiver")
+	lockContractTransactionCmd.PersistentFlags().BoolVar(&pretty, "pretty", false, "pretty print json result")
+	lockContractTransactionCmd.PersistentFlags().BoolVar(&alias, "alias", false, "use alias build transaction")
+
+	unlockContractTransactionCmd.PersistentFlags().StringVarP(&btmGas, "gas", "g", "20000000", "program of receiver")
+	unlockContractTransactionCmd.PersistentFlags().BoolVar(&pretty, "pretty", false, "pretty print json result")
+	unlockContractTransactionCmd.PersistentFlags().BoolVar(&alias, "alias", false, "use alias build transaction")
+	unlockContractTransactionCmd.PersistentFlags().StringVarP(&contractName, "contract-name", "c", "",
+		"name of template contract, currently supported: 'LockWithPublicKey', 'LockWithMultiSig', 'LockWithPublicKeyHash',"+
+			"\n\t\t\t       'RevealPreimage', 'TradeOffer', 'Escrow', 'CallOption', 'LoanCollateral'")
+
 	signTransactionCmd.PersistentFlags().StringVarP(&password, "password", "p", "", "password of the account which sign these transaction(s)")
 	signTransactionCmd.PersistentFlags().BoolVar(&pretty, "pretty", false, "pretty print json result")
 
@@ -43,6 +54,7 @@ var (
 	txID            = ""
 	account         = ""
 	detail          = false
+	contractName    = ""
 )
 
 var buildIssueReqFmt = `
@@ -101,6 +113,20 @@ var buildControlAddressReqFmtByAlias = `
 		{"type": "control_address", "asset_alias": "%s", "amount": %s,"address": "%s"}
 	]}`
 
+var buildContractReqFmt = `
+	{"actions": [
+		{"type": "spend_account", "asset_id": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "amount":%s, "account_id": "%s"},
+		{"type": "spend_account", "asset_id": "%s","amount": %s,"account_id": "%s"},
+		{"type": "control_program", "asset_id": "%s", "amount": %s, "control_program": "%s", "reference_data": {}}
+	]}`
+
+var buildContractReqFmtByAlias = `
+	{"actions": [
+		{"type": "spend_account", "asset_alias": "btm", "amount":%s, "account_alias": "%s"},
+		{"type": "spend_account", "asset_alias": "%s","amount": %s,"account_alias": "%s"},
+		{"type": "control_program", "asset_alias": "%s", "amount": %s, "control_program": "%s", "reference_data": {}}
+	]}`
+
 var buildTransactionCmd = &cobra.Command{
 	Use:   "build-transaction <accountID|alias> <assetID|alias> <amount>",
 	Short: "Build one transaction template,default use account id and asset id",
@@ -153,6 +179,102 @@ var buildTransactionCmd = &cobra.Command{
 		}
 
 		data, exitCode := util.ClientCall("/build-transaction", &buildReq)
+		if exitCode != util.Success {
+			os.Exit(exitCode)
+		}
+
+		if pretty {
+			printJSON(data)
+			return
+		}
+
+		dataMap, ok := data.(map[string]interface{})
+		if ok != true {
+			jww.ERROR.Println("invalid type assertion")
+			os.Exit(util.ErrLocalParse)
+		}
+
+		rawTemplate, err := json.Marshal(dataMap)
+		if err != nil {
+			jww.ERROR.Println(err)
+			os.Exit(util.ErrLocalParse)
+		}
+
+		jww.FEEDBACK.Printf("Template Type: %s\n%s\n", buildType, string(rawTemplate))
+	},
+}
+
+var lockContractTransactionCmd = &cobra.Command{
+	Use:   "lock-contract-transaction <accountID|alias> <assetID|alias> <amount> <contractProgram>",
+	Short: "Build one transaction template,default use account id and asset id",
+	Args:  cobra.ExactArgs(4),
+	Run: func(cmd *cobra.Command, args []string) {
+		var buildReqStr string
+		accountInfo := args[0]
+		assetInfo := args[1]
+		amount := args[2]
+		contractProgram := args[3]
+
+		if alias {
+			buildReqStr = fmt.Sprintf(buildContractReqFmtByAlias, btmGas, accountInfo, assetInfo, amount, accountInfo, assetInfo, amount, contractProgram)
+		} else {
+			buildReqStr = fmt.Sprintf(buildContractReqFmt, btmGas, accountInfo, assetInfo, amount, accountInfo, assetInfo, amount, contractProgram)
+		}
+
+		var buildReq api.BuildRequest
+		if err := json.Unmarshal([]byte(buildReqStr), &buildReq); err != nil {
+			jww.ERROR.Println(err)
+			os.Exit(util.ErrLocalExe)
+		}
+
+		data, exitCode := util.ClientCall("/lock-contract-transaction", &buildReq)
+		if exitCode != util.Success {
+			os.Exit(exitCode)
+		}
+
+		if pretty {
+			printJSON(data)
+			return
+		}
+
+		dataMap, ok := data.(map[string]interface{})
+		if ok != true {
+			jww.ERROR.Println("invalid type assertion")
+			os.Exit(util.ErrLocalParse)
+		}
+
+		rawTemplate, err := json.Marshal(dataMap)
+		if err != nil {
+			jww.ERROR.Println(err)
+			os.Exit(util.ErrLocalParse)
+		}
+
+		jww.FEEDBACK.Printf("Template Type: %s\n%s\n", buildType, string(rawTemplate))
+	},
+}
+
+var unlockContractTransactionCmd = &cobra.Command{
+	Use:   "unlock-contract-transaction <outputID> <accountID|alias> <assetID|alias> <amount> -c <contractName> <contractArgs>",
+	Short: "Build transaction for template contract, default use account id and asset id",
+	Args:  cobra.RangeArgs(4, 20),
+	PreRun: func(cmd *cobra.Command, args []string) {
+		cmd.MarkFlagRequired("contract-name")
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		minArgsCount := 4
+		usage := "Usage:\n  bytomcli unlock-contract-transaction <outputID> <accountID|alias> <assetID|alias> <amount> -c <contractName>"
+		if err := CheckContractArgs(contractName, args, minArgsCount, usage); err != nil {
+			jww.ERROR.Println(err)
+			os.Exit(util.ErrLocalExe)
+		}
+
+		req, err := BuildReq(contractName, args, alias, btmGas)
+		if err != nil {
+			jww.ERROR.Println(err)
+			os.Exit(util.ErrLocalExe)
+		}
+
+		data, exitCode := util.ClientCall("/unlock-contract-transaction", req)
 		if exitCode != util.Success {
 			os.Exit(exitCode)
 		}

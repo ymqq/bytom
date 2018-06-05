@@ -188,6 +188,8 @@ func (a *API) buildHandler() {
 		m.Handle("/sign-message", jsonHandler(a.signMessage))
 
 		m.Handle("/build-transaction", jsonHandler(a.build))
+		m.Handle("/lock-contract-transaction", jsonHandler(a.lockContractTX))
+		m.Handle("/unlock-contract-transaction", jsonHandler(a.unlockContractTX))
 		m.Handle("/sign-transaction", jsonHandler(a.pseudohsmSignTemplates))
 
 		m.Handle("/get-transaction", jsonHandler(a.getTransaction))
