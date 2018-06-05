@@ -37,7 +37,7 @@ var buildInlineAcctReqFmt = `
 		{"type": "control_program", "asset_id": "%s", "amount": %s, "control_program": "%s"},
 		{"type": "spend_account", "asset_id": "%s", "amount": %s, "account_id": "%s"},
 		{"type": "spend_account", "asset_id": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "amount":%s, "account_id": "%s"},
-		{"type": "control_account", "asset_id": "%s", "amount": %s, "account_id": "%s"}
+		{"type": "control_program", "asset_id": "%s", "amount": %s, "control_program": "%s"}
 	]}`
 
 var buildInlineAcctReqFmtByAlias = `
@@ -46,7 +46,7 @@ var buildInlineAcctReqFmtByAlias = `
 		{"type": "control_program", "asset_alias": "%s", "amount": %s, "control_program": "%s"},
 		{"type": "spend_account", "asset_alias": "%s", "amount": %s, "account_alias": "%s"},
 		{"type": "spend_account", "asset_alias": "btm", "amount": %s, "account_alias": "%s"},
-		{"type": "control_account", "asset_alias": "%s", "amount": %s, "account_alias": "%s"}
+		{"type": "control_program", "asset_alias": "%s", "amount": %s, "control_program": "%s"}
 	]}`
 
 // InlineAcct is the contract contains only two statement with "lock payment with program" and "lock value with control_program"

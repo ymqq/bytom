@@ -53,13 +53,13 @@ func (a *TradeOffer) Build() (buildReqStr string, err error) {
 				a.InnerAssetInfo, a.InnerAmount, a.InnerProgram,
 				a.InnerAssetInfo, a.InnerAmount, a.InnerAccountInfo,
 				a.BtmGas, a.AccountInfo,
-				a.AssetInfo, a.Amount, a.AccountInfo)
+				a.AssetInfo, a.Amount, a.Receiver)
 		} else {
 			buildReqStr = fmt.Sprintf(buildInlineAcctReqFmt, a.OutputID,
 				a.InnerAssetInfo, a.InnerAmount, a.InnerProgram,
 				a.InnerAssetInfo, a.InnerAmount, a.InnerAccountInfo,
 				a.BtmGas, a.AccountInfo,
-				a.AssetInfo, a.Amount, a.AccountInfo)
+				a.AssetInfo, a.Amount, a.Receiver)
 		}
 	case ClauseCancel:
 		if a.Alias {

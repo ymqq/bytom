@@ -214,6 +214,7 @@ func NewTradeOffer(args []string, alias bool, btmGas string) *contract.TradeOffe
 				AccountInfo: args[1],
 				AssetInfo:   args[2],
 				Amount:      args[3],
+				Receiver:    args[4],
 				Alias:       alias,
 				BtmGas:      btmGas,
 			},

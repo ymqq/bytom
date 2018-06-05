@@ -254,15 +254,17 @@ var lockContractTransactionCmd = &cobra.Command{
 }
 
 var unlockContractTransactionCmd = &cobra.Command{
-	Use:   "unlock-contract-transaction <outputID> <accountID|alias> <assetID|alias> <amount> -c <contractName> <contractArgs>",
+	Use:   "unlock-contract-transaction <outputID> <accountID|alias> <assetID|alias> <amount> <receiver_program> -c <contractName> <contractArgs>",
 	Short: "Build transaction for template contract, default use account id and asset id",
 	Args:  cobra.RangeArgs(4, 20),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		cmd.MarkFlagRequired("contract-name")
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		minArgsCount := 4
-		usage := "Usage:\n  bytomcli unlock-contract-transaction <outputID> <accountID|alias> <assetID|alias> <amount> -c <contractName>"
+		minArgsCount := 5
+		fmt.Println("---------clause:", args[minArgsCount])
+
+		usage := "Usage:\n  bytomcli unlock-contract-transaction <outputID> <accountID|alias> <assetID|alias> <amount> <receiver_program> -c <contractName>"
 		if err := CheckContractArgs(contractName, args, minArgsCount, usage); err != nil {
 			jww.ERROR.Println(err)
 			os.Exit(util.ErrLocalExe)

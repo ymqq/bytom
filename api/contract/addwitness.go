@@ -15,6 +15,7 @@ type CommonInfo struct {
 	AccountInfo string `json:"account"`
 	AssetInfo   string `json:"asset"`
 	Amount      string `json:"amount"`
+	Receiver    string `json:"receiver"`
 	Alias       bool   `json:"alias"`
 	BtmGas      string `json:"btm_gas"`
 }
