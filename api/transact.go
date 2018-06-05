@@ -133,16 +133,6 @@ func (a *API) build(ctx context.Context, buildReqs *BuildRequest) Response {
 func (a *API) lockContractTX(ctx context.Context, buildReqs *BuildRequest) Response {
 	subctx := reqid.NewSubContext(ctx, reqid.New())
 
-	accoutID, prog, err := a.getContractAccountID(ctx, buildReqs)
-	if err != nil {
-		return NewErrorResponse(err)
-	}
-
-	// establish an association between account and contract
-	if _, err = a.wallet.AccountMgr.CreateContractHook(ctx, accoutID, prog); err != nil {
-		return NewErrorResponse(err)
-	}
-
 	tmpl, err := a.buildSingle(subctx, buildReqs)
 	if err != nil {
 		return NewErrorResponse(err)

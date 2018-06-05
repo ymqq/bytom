@@ -3,7 +3,6 @@ package account
 
 import (
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"strings"
 	"sync"
@@ -509,24 +508,4 @@ func (m *Manager) CreatePubkey(ctx context.Context, accountID string) (rootXPub 
 	pubkey = derivedXPub.PublicKey()
 
 	return rootXPub, pubkey, path, nil
-}
-
-// CreateContractHook generate a extend contract program for an account
-func (m *Manager) CreateContractHook(ctx context.Context, accountID string, contractProgram string) ([]byte, error) {
-	contract, err := hex.DecodeString(contractProgram)
-	if err != nil {
-		return nil, err
-	}
-
-	cp := &CtrlProgram{
-		AccountID:      accountID,
-		ControlProgram: contract,
-		Change:         false,
-	}
-
-	if err = m.insertAccountControlProgram(ctx, cp); err != nil {
-		return nil, err
-	}
-
-	return cp.ControlProgram, nil
 }
