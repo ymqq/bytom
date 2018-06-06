@@ -418,7 +418,7 @@ func compileClause(b *builder, contractStk stack, contract *Contract, env *envir
 				stk = b.addInt64(stk, stmt.index)
 
 				// refdatahash
-				stk = b.addData(stk, nil)
+				//stk = b.addData(stk, nil)
 
 				stk = b.addAmount(stk)
 				stk = b.addAsset(stk)
@@ -445,7 +445,7 @@ func compileClause(b *builder, contractStk stack, contract *Contract, env *envir
 							stk = b.addInt64(stk, stmt.index+int64(i))
 
 							// refdatahash
-							stk = b.addData(stk, nil)
+							//stk = b.addData(stk, nil)
 
 							// amount
 							stk, err = compileExpr(b, stk, contract, clause, env, counts, req.amountExpr)
