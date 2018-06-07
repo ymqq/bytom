@@ -262,7 +262,6 @@ var unlockContractTransactionCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		minArgsCount := 5
-		fmt.Println("---------clause:", args[minArgsCount])
 
 		usage := "Usage:\n  bytomcli unlock-contract-transaction <outputID> <accountID|alias> <assetID|alias> <amount> <receiver_program> -c <contractName>"
 		if err := CheckContractArgs(contractName, args, minArgsCount, usage); err != nil {

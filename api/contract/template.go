@@ -12,7 +12,7 @@ var buildAcctRecvReqFmtByAlias = `
 	{"actions": [
 		{"type": "spend_account_unspent_output", "output_id":"%s"},
 		{"type": "control_account", "asset_alias": "%s", "amount": %s, "account_alias": "%s"},
-		{"type": "spend_account", "asset_alias": "btm", "amount": %s, "account_alias": "%s"}
+		{"type": "spend_account", "asset_alias": "BTM", "amount": %s, "account_alias": "%s"}
 	]}`
 
 // ProgRecv is the contract contains only one statement with "lock value with program"
@@ -27,7 +27,7 @@ var buildProgRecvReqFmtByAlias = `
 	{"actions": [
 		{"type": "spend_account_unspent_output", "output_id":"%s"},
 		{"type": "control_program", "asset_alias": "%s", "amount": %s, "control_program": "%s"},
-		{"type": "spend_account", "asset_alias": "btm", "amount": %s, "account_alias": "%s"}
+		{"type": "spend_account", "asset_alias": "BTM", "amount": %s, "account_alias": "%s"}
 	]}`
 
 // InlineAcct is the contract contains only two statement with "lock payment with program" and "unlock value"
@@ -45,7 +45,7 @@ var buildInlineAcctReqFmtByAlias = `
 		{"type": "spend_account_unspent_output", "output_id":"%s"},
 		{"type": "control_program", "asset_alias": "%s", "amount": %s, "control_program": "%s"},
 		{"type": "spend_account", "asset_alias": "%s", "amount": %s, "account_alias": "%s"},
-		{"type": "spend_account", "asset_alias": "btm", "amount": %s, "account_alias": "%s"},
+		{"type": "spend_account", "asset_alias": "BTM", "amount": %s, "account_alias": "%s"},
 		{"type": "control_program", "asset_alias": "%s", "amount": %s, "control_program": "%s"}
 	]}`
 
@@ -65,5 +65,5 @@ var buildInlineProgReqFmtByAlias = `
 		{"type": "control_program", "asset_alias": "%s", "amount": %s, "control_program": "%s"},
 		{"type": "control_program", "asset_alias": "%s", "amount": %s, "control_program": "%s"},
 		{"type": "spend_account", "asset_alias": "%s", "amount": %s, "account_alias": "%s"},
-		{"type": "spend_account", "asset_alias": "btm", "amount": %s, "account_alias": "%s"}
+		{"type": "spend_account", "asset_alias": "BTM", "amount": %s, "account_alias": "%s"}
 	]}`

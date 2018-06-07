@@ -205,7 +205,7 @@ func NewRevealPreimage(args []string, alias bool, btmGas string) *contract.Revea
 
 // NewTradeOffer create the contract object for TradeOffer
 func NewTradeOffer(args []string, alias bool, btmGas string) *contract.TradeOffer {
-	selector := args[4]
+	selector := args[5]
 	switch selector {
 	case contract.ClauseTrade:
 		return &contract.TradeOffer{
@@ -218,12 +218,12 @@ func NewTradeOffer(args []string, alias bool, btmGas string) *contract.TradeOffe
 				Alias:       alias,
 				BtmGas:      btmGas,
 			},
-			Selector: args[4],
+			Selector: args[5],
 			PaymentInfo: contract.PaymentInfo{
-				InnerAccountInfo: args[5],
-				InnerAssetInfo:   args[6],
-				InnerAmount:      args[7],
-				InnerProgram:     args[8],
+				InnerAccountInfo: args[6],
+				InnerAssetInfo:   args[7],
+				InnerAmount:      args[8],
+				InnerProgram:     args[9],
 			},
 		}
 	case contract.ClauseCancel:
@@ -233,13 +233,14 @@ func NewTradeOffer(args []string, alias bool, btmGas string) *contract.TradeOffe
 				AccountInfo: args[1],
 				AssetInfo:   args[2],
 				Amount:      args[3],
+				Receiver:    args[4],
 				Alias:       alias,
 				BtmGas:      btmGas,
 			},
-			Selector: args[4],
+			Selector: args[5],
 			PubKeyInfo: contract.PubKeyInfo{
-				RootPubKey: args[5],
-				Path:       []string{args[6], args[7]},
+				RootPubKey: args[6],
+				Path:       []string{args[7], args[8]},
 			},
 		}
 	default:
