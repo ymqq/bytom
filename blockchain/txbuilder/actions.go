@@ -132,6 +132,7 @@ func DecodeRetireAction(data []byte) (Action, error) {
 
 type retireAction struct {
 	bc.AssetAmount
+	ReferenceData json.HexBytes `json:"reference_data"`
 }
 
 func (a *retireAction) Build(ctx context.Context, b *TemplateBuilder) error {
@@ -144,6 +145,10 @@ func (a *retireAction) Build(ctx context.Context, b *TemplateBuilder) error {
 	}
 	if len(missing) > 0 {
 		return MissingFieldsError(missing...)
+	}
+
+	if a.ReferenceData != nil {
+		retirementProgram = append(retirementProgram, a.ReferenceData...)
 	}
 
 	out := types.NewTxOutput(*a.AssetId, a.Amount, retirementProgram)

@@ -20,6 +20,7 @@ func init() {
 	buildTransactionCmd.PersistentFlags().StringVarP(&buildType, "type", "t", "", "transaction type, valid types: 'issue', 'spend'")
 	buildTransactionCmd.PersistentFlags().StringVarP(&receiverProgram, "receiver", "r", "", "program of receiver")
 	buildTransactionCmd.PersistentFlags().StringVarP(&address, "address", "a", "", "address of receiver")
+	buildTransactionCmd.PersistentFlags().StringVarP(&referenceData, "reference", "e", "", "reference data of retire")
 	buildTransactionCmd.PersistentFlags().StringVarP(&btmGas, "gas", "g", "20000000", "gas of this transaction")
 	buildTransactionCmd.PersistentFlags().BoolVar(&pretty, "pretty", false, "pretty print json result")
 	buildTransactionCmd.PersistentFlags().BoolVar(&alias, "alias", false, "use alias build transaction")
@@ -49,6 +50,7 @@ var (
 	btmGas          = ""
 	receiverProgram = ""
 	address         = ""
+	referenceData   = ""
 	password        = ""
 	pretty          = false
 	alias           = false
@@ -90,15 +92,15 @@ var buildSpendReqFmtByAlias = `
 var buildRetireReqFmt = `
 	{"actions": [
 		{"type": "spend_account", "asset_id": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "amount":%s, "account_id": "%s"},
-		{"type": "spend_account", "asset_id": "%s","amount": %s,"account_id": "%s"},
-		{"type": "retire", "asset_id": "%s","amount": %s,"account_id": "%s"}
+		{"type": "spend_account", "asset_id": "%s", "amount": %s, "account_id": "%s"},
+		{"type": "retire", "asset_id": "%s", "amount": %s, "reference_data": "%s"}
 	]}`
 
 var buildRetireReqFmtByAlias = `
 	{"actions": [
 		{"type": "spend_account", "asset_alias": "BTM", "amount":%s, "account_alias": "%s"},
-		{"type": "spend_account", "asset_alias": "%s","amount": %s,"account_alias": "%s"},
-		{"type": "retire", "asset_alias": "%s","amount": %s,"account_alias": "%s"}
+		{"type": "spend_account", "asset_alias": "%s", "amount": %s, "account_alias": "%s"},
+		{"type": "retire", "asset_alias": "%s", "amount": %s, "reference_data": "%s"}
 	]}`
 
 var buildControlAddressReqFmt = `
@@ -159,10 +161,10 @@ var buildTransactionCmd = &cobra.Command{
 			buildReqStr = fmt.Sprintf(buildSpendReqFmt, btmGas, accountInfo, assetInfo, amount, accountInfo, assetInfo, amount, receiverProgram)
 		case "retire":
 			if alias {
-				buildReqStr = fmt.Sprintf(buildRetireReqFmtByAlias, btmGas, accountInfo, assetInfo, amount, accountInfo, assetInfo, amount, accountInfo)
+				buildReqStr = fmt.Sprintf(buildRetireReqFmtByAlias, btmGas, accountInfo, assetInfo, amount, accountInfo, assetInfo, amount, referenceData)
 				break
 			}
-			buildReqStr = fmt.Sprintf(buildRetireReqFmt, btmGas, accountInfo, assetInfo, amount, accountInfo, assetInfo, amount, accountInfo)
+			buildReqStr = fmt.Sprintf(buildRetireReqFmt, btmGas, accountInfo, assetInfo, amount, accountInfo, assetInfo, amount, referenceData)
 		case "address":
 			if alias {
 				buildReqStr = fmt.Sprintf(buildControlAddressReqFmtByAlias, btmGas, accountInfo, assetInfo, amount, accountInfo, assetInfo, amount, address)
