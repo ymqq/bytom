@@ -41,7 +41,7 @@ seeds = "52.83.107.224:46656,52.83.107.224:46656,52.83.251.197:46656"
 var soloNetConfigTmpl = `chain_id = "solonet"
 [p2p]
 laddr = "tcp://0.0.0.0:46658"
-seeds = ""
+seeds = "52.83.138.208:46658,52.83.119.40:46658"
 `
 
 // Select network seeds to merge a new string.
