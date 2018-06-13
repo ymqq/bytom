@@ -28,7 +28,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bytom/crypto"
 	log "github.com/sirupsen/logrus"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/errors"
@@ -198,14 +197,14 @@ func (db *nodeDB) storeInt64(key []byte, n int64) error {
 //}
 
 // node retrieves a node with a given id from the database.
-func (db *nodeDB) node(id NodeID) *Node {
-	var node Node
-	//if err := db.fetchRLP(makeKey(id, nodeDBDiscoverRoot), &node); err != nil {
-	//	return nil
-	//}
-	node.sha = crypto.Sha256Hash(node.ID[:])
-	return &node
-}
+//func (db *nodeDB) node(id NodeID) *Node {
+//	var node Node
+//	//if err := db.fetchRLP(makeKey(id, nodeDBDiscoverRoot), &node); err != nil {
+//	//	return nil
+//	//}
+//	node.sha = crypto.Sha256Hash(node.ID[:])
+//	return &node
+//}
 
 // updateNode inserts - potentially overwriting - a node into the peer database.
 //func (db *nodeDB) updateNode(node *Node) error {
