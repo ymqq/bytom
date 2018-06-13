@@ -17,8 +17,9 @@ const (
 	// PexChannel is a channel for PEX messages
 	PexChannel = byte(0x00)
 
-	minNumOutboundPeers = 4
-	maxPexMessageSize   = 1048576 // 1MB
+	minNumOutboundPeers      = 2
+	maxPexMessageSize        = 1048576 // 1MB
+	defaultMaxMsgCountByPeer = uint16(1000)
 )
 
 // PEXReactor handles peer exchange and ensures that an adequate number of peers are connected to the switch.

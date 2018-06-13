@@ -135,7 +135,7 @@ func DefaultP2PConfig() *P2PConfig {
 		AddrBookStrict:   true,
 		SkipUPNP:         false,
 		MaxNumPeers:      5,
-		HandshakeTimeout: 3,
+		HandshakeTimeout: 30,
 		DialTimeout:      3,
 		PexReactor:       true,
 	}
