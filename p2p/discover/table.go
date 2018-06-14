@@ -191,8 +191,9 @@ func (tab *Table) closest(target common.Hash, nresults int) *nodesByDistance {
 // bucket has space available, adding the node succeeds immediately.
 // Otherwise, the node is added to the replacement cache for the bucket.
 func (tab *Table) add(n *Node) (contested *Node) {
-	fmt.Println("add", n.addr().String(), n.ID.String(), n.sha.Hex())
+	fmt.Println("add:", n.addr().String(), n.ID.String(), n.sha.Hex(), "self id:",tab.self.ID.String())
 	if n.ID == tab.self.ID {
+		fmt.Println("n.id == tab.self.id")
 		return
 	}
 	b := tab.buckets[logdist(tab.self.sha, n.sha)]

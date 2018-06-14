@@ -168,7 +168,7 @@ var (
 	versionPrefix     = []byte("bytom discovery")
 	versionPrefixSize = len(versionPrefix)
 	nodeIDSize        = 32
-	sigSize           = 520 / 8
+	sigSize           = 65
 	headSize          = versionPrefixSize + nodeIDSize + sigSize // space of packet frame data
 )
 
@@ -442,6 +442,7 @@ func decodePacket(buffer []byte, pkt *ingressPacket) error {
 	if !bytes.Equal(prefix, versionPrefix) {
 		return errBadPrefix
 	}
+	fmt.Println("fromID:", fromID, "versionPrefixSize:", versionPrefixSize)
 	pkt.rawData = buf
 	pkt.hash = common.BytesToHash(buf[versionPrefixSize:]).Bytes()
 	pkt.remoteID = ByteID(fromID)
