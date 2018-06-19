@@ -16,19 +16,40 @@ You can operate according to the user manual.[(Bytom User Manual)](URL 'https://
 
 1.0.3 changelog
 ================
-Bytom Node
-`PR #969`  - Fix x86-32 system exeception on build transaction.
-`PR #983`  - API transaction json struct add tx_size field.
-`PR #987`  - API Get-block response's transaction struct add mux_id.
-`PR #988`  - Add API decode-program.
-`PR #1006` - API list-addresses is sort by create time.
-`PR #1022` - API list-transactions and get-transaction support return unconfirmed transaction.
-`PR #1023` - Add API get-work-json & submit-work-json
-`PR #1030` - Add server flag on peer netowork handshake
-`PR #1032` - Implementing the UDP Node Discovery Protocol.
-`PR #1039` - Modify error model for support high level error message 
+__Bytom Node__
 
-Bytom Dashboard
+`PR #969`  
+- Fix x86-32 system exeception on build transaction.
+
+`PR #983`  
+- API transaction json struct add tx_size field.
+
+`PR #987`  
+- API Get-block response's transaction struct add mux_id.
+
+`PR #988`  
+- Add API decode-program.
+
+`PR #1006` 
+- API list-addresses is sort by create time.
+
+`PR #1022` 
+- API list-transactions and get-transaction support return unconfirmed transaction.
+
+`PR #1023` 
+- Add API get-work-json & submit-work-json
+
+`PR #1030` 
+- Add server flag on peer netowork handshake
+
+`PR #1032` 
+- Implementing the UDP Node Discovery Protocol.
+
+`PR #1039` 
+- Modify error model for support high level error message 
+
+__Bytom Dashboard__
+
 `a51081c`
   - Add progress bar for Sync Status.
   - Modified the frontend for the list unconfirmed Tx.
