@@ -192,7 +192,7 @@ func (bk *blockKeeper) BlockRequest(peerID string, height uint64) (*types.Block,
 func (bk *blockKeeper) txsProcessWorker() {
 	for txsResponse := range bk.txsProcessCh {
 		tx := txsResponse.tx
-		log.Info("Receive new tx from remote peer. TxID:", tx.ID.String())
+		//log.Info("Receive new tx from remote peer. TxID:", tx.ID.String())
 		bk.peers.MarkTransaction(txsResponse.peerID, &tx.ID)
 		if isOrphan, err := bk.chain.ValidateTx(tx); err != nil && isOrphan == false {
 			if bkPeer, ok := bk.peers.Peer(txsResponse.peerID); ok {
