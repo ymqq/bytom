@@ -17,7 +17,7 @@ import (
 var CallOptionBodyBytes []byte
 
 func init() {
-	CallOptionBodyBytes, _ = hex.DecodeString("557a6422000000547ac5a069547a547aae7cac6900007b537a51557ac1632f000000547ac59f690000c3c251577ac1")
+	CallOptionBodyBytes, _ = hex.DecodeString("557a6420000000547ac5a069547a547aae7cac69007c7b51547ac1632c000000547ac59f6900c3c251567ac1")
 }
 
 // contract CallOption(strikePrice: Amount, strikeCurrency: Asset, seller: Program, buyerKey: PublicKey, deadline: Time) locks underlying
@@ -37,14 +37,12 @@ func init() {
 // TXSIGHASH SWAP CHECKSIG  [... seller strikeCurrency strikePrice checkTxSig(buyerKey, buyerSig)]
 // VERIFY                   [... seller strikeCurrency strikePrice]
 // 0                        [... seller strikeCurrency strikePrice 0]
-// 0                        [... seller strikeCurrency strikePrice 0 0]
-// 2                        [... seller strikeCurrency strikePrice 0 0 2]
-// ROLL                     [... seller strikeCurrency 0 0 strikePrice]
-// 3                        [... seller strikeCurrency 0 0 strikePrice 3]
-// ROLL                     [... seller 0 0 strikePrice strikeCurrency]
-// 1                        [... seller 0 0 strikePrice strikeCurrency 1]
-// 5                        [... seller 0 0 strikePrice strikeCurrency 1 5]
-// ROLL                     [... 0 0 strikePrice strikeCurrency 1 seller]
+// SWAP                     [... seller strikeCurrency 0 strikePrice]
+// 2                        [... seller strikeCurrency 0 strikePrice 2]
+// ROLL                     [... seller 0 strikePrice strikeCurrency]
+// 1                        [... seller 0 strikePrice strikeCurrency 1]
+// 4                        [... seller 0 strikePrice strikeCurrency 1 4]
+// ROLL                     [... 0 strikePrice strikeCurrency 1 seller]
 // CHECKOUTPUT              [... checkOutput(payment, seller)]
 // JUMP:$_end               [... deadline buyerKey seller strikeCurrency strikePrice]
 // $expire                  [... deadline buyerKey seller strikeCurrency strikePrice]
@@ -53,13 +51,12 @@ func init() {
 // BLOCKTIME LESSTHAN       [... buyerKey seller strikeCurrency strikePrice after(deadline)]
 // VERIFY                   [... buyerKey seller strikeCurrency strikePrice]
 // 0                        [... buyerKey seller strikeCurrency strikePrice 0]
-// 0                        [... buyerKey seller strikeCurrency strikePrice 0 0]
-// AMOUNT                   [... buyerKey seller strikeCurrency strikePrice 0 0 <amount>]
-// ASSET                    [... buyerKey seller strikeCurrency strikePrice 0 0 <amount> <asset>]
-// 1                        [... buyerKey seller strikeCurrency strikePrice 0 0 <amount> <asset> 1]
-// 7                        [... buyerKey seller strikeCurrency strikePrice 0 0 <amount> <asset> 1 7]
-// ROLL                     [... buyerKey strikeCurrency strikePrice 0 0 <amount> <asset> 1 seller]
-// CHECKOUTPUT              [... buyerKey strikeCurrency strikePrice checkOutput(underlying, seller)]
+// AMOUNT                   [... buyerKey seller strikeCurrency strikePrice 0 <amount>]
+// ASSET                    [... buyerKey seller strikeCurrency strikePrice 0 <amount> <asset>]
+// 1                        [... buyerKey seller strikeCurrency strikePrice 0 <amount> <asset> 1]
+// 6                        [... buyerKey seller strikeCurrency strikePrice 0 <amount> <asset> 1 6]
+// ROLL                     [... buyerKey strikeCurrency strikePrice 0 <amount> <asset> 1 seller]
+// CHECKOUTPUT              [... buyerKey strikeCurrency checkOutput(underlying, seller)]
 // $_end                    [... deadline buyerKey seller strikeCurrency strikePrice]
 
 // PayToCallOption instantiates contract CallOption as a program with specific arguments.

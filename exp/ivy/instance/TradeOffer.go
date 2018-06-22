@@ -16,7 +16,7 @@ import (
 var TradeOfferBodyBytes []byte
 
 func init() {
-	TradeOfferBodyBytes, _ = hex.DecodeString("547a641300000000007251557ac1631a000000547a547aae7cac")
+	TradeOfferBodyBytes, _ = hex.DecodeString("547a6413000000007b7b51547ac1631a000000547a547aae7cac")
 }
 
 // contract TradeOffer(assetRequested: Asset, amountRequested: Amount, seller: Program, cancelKey: PublicKey) locks offered
@@ -26,15 +26,14 @@ func init() {
 // JUMPIF:$cancel           [... cancelKey seller amountRequested assetRequested]
 // $trade                   [... cancelKey seller amountRequested assetRequested]
 // 0                        [... cancelKey seller amountRequested assetRequested 0]
-// 0                        [... cancelKey seller amountRequested assetRequested 0 0]
-// 3                        [... cancelKey seller amountRequested assetRequested 0 0 3]
-// ROLL                     [... cancelKey seller assetRequested 0 0 amountRequested]
-// 3                        [... cancelKey seller assetRequested 0 0 amountRequested 3]
-// ROLL                     [... cancelKey seller 0 0 amountRequested assetRequested]
-// 1                        [... cancelKey seller 0 0 amountRequested assetRequested 1]
-// 5                        [... cancelKey seller 0 0 amountRequested assetRequested 1 5]
-// ROLL                     [... cancelKey 0 0 amountRequested assetRequested 1 seller]
-// CHECKOUTPUT              [... cancelKey checkOutput(payment, seller)]
+// 2                        [... cancelKey seller amountRequested assetRequested 0 2]
+// ROLL                     [... cancelKey seller assetRequested 0 amountRequested]
+// 2                        [... cancelKey seller assetRequested 0 amountRequested 2]
+// ROLL                     [... cancelKey seller 0 amountRequested assetRequested]
+// 1                        [... cancelKey seller 0 amountRequested assetRequested 1]
+// 4                        [... cancelKey seller 0 amountRequested assetRequested 1 4]
+// ROLL                     [... cancelKey 0 amountRequested assetRequested 1 seller]
+// CHECKOUTPUT              [... checkOutput(payment, seller)]
 // JUMP:$_end               [... cancelKey seller amountRequested assetRequested]
 // $cancel                  [... cancelKey seller amountRequested assetRequested]
 // 4                        [... sellerSig cancelKey seller amountRequested assetRequested 4]

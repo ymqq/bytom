@@ -15,7 +15,7 @@ import (
 var EscrowBodyBytes []byte
 
 func init() {
-	EscrowBodyBytes, _ = hex.DecodeString("537a641b000000537a7cae7cac690000c3c251567ac1632a000000537a7cae7cac690000c3c251557ac1")
+	EscrowBodyBytes, _ = hex.DecodeString("537a641a000000537a7cae7cac6900c3c251557ac16328000000537a7cae7cac6900c3c251547ac1")
 }
 
 // contract Escrow(agent: PublicKey, sender: Program, recipient: Program) locks value
@@ -30,13 +30,12 @@ func init() {
 // TXSIGHASH SWAP CHECKSIG  [... recipient sender checkTxSig(agent, sig)]
 // VERIFY                   [... recipient sender]
 // 0                        [... recipient sender 0]
-// 0                        [... recipient sender 0 0]
-// AMOUNT                   [... recipient sender 0 0 <amount>]
-// ASSET                    [... recipient sender 0 0 <amount> <asset>]
-// 1                        [... recipient sender 0 0 <amount> <asset> 1]
-// 6                        [... recipient sender 0 0 <amount> <asset> 1 6]
-// ROLL                     [... sender 0 0 <amount> <asset> 1 recipient]
-// CHECKOUTPUT              [... sender checkOutput(value, recipient)]
+// AMOUNT                   [... recipient sender 0 <amount>]
+// ASSET                    [... recipient sender 0 <amount> <asset>]
+// 1                        [... recipient sender 0 <amount> <asset> 1]
+// 5                        [... recipient sender 0 <amount> <asset> 1 5]
+// ROLL                     [... sender 0 <amount> <asset> 1 recipient]
+// CHECKOUTPUT              [... checkOutput(value, recipient)]
 // JUMP:$_end               [... recipient sender agent]
 // $reject                  [... recipient sender agent]
 // 3                        [... sig recipient sender agent 3]
@@ -45,13 +44,12 @@ func init() {
 // TXSIGHASH SWAP CHECKSIG  [... recipient sender checkTxSig(agent, sig)]
 // VERIFY                   [... recipient sender]
 // 0                        [... recipient sender 0]
-// 0                        [... recipient sender 0 0]
-// AMOUNT                   [... recipient sender 0 0 <amount>]
-// ASSET                    [... recipient sender 0 0 <amount> <asset>]
-// 1                        [... recipient sender 0 0 <amount> <asset> 1]
-// 5                        [... recipient sender 0 0 <amount> <asset> 1 5]
-// ROLL                     [... recipient 0 0 <amount> <asset> 1 sender]
-// CHECKOUTPUT              [... recipient checkOutput(value, sender)]
+// AMOUNT                   [... recipient sender 0 <amount>]
+// ASSET                    [... recipient sender 0 <amount> <asset>]
+// 1                        [... recipient sender 0 <amount> <asset> 1]
+// 4                        [... recipient sender 0 <amount> <asset> 1 4]
+// ROLL                     [... recipient 0 <amount> <asset> 1 sender]
+// CHECKOUTPUT              [... checkOutput(value, sender)]
 // $_end                    [... recipient sender agent]
 
 // PayToEscrow instantiates contract Escrow as a program with specific arguments.
