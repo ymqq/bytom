@@ -3,13 +3,13 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"math"
 	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/bytom/account"
 	"github.com/bytom/blockchain/txbuilder"
 	"github.com/bytom/consensus"
 	"github.com/bytom/consensus/segwit"
@@ -26,69 +26,17 @@ var (
 )
 
 func (a *API) actionDecoder(action string) (func([]byte) (txbuilder.Action, error), bool) {
-	var decoder func([]byte) (txbuilder.Action, error)
-	switch action {
-	case "control_address":
-		decoder = txbuilder.DecodeControlAddressAction
-	case "control_program":
-		decoder = txbuilder.DecodeControlProgramAction
-	case "control_receiver":
-		decoder = txbuilder.DecodeControlReceiverAction
-	case "issue":
-		decoder = a.wallet.AssetReg.DecodeIssueAction
-	case "retire":
-		decoder = txbuilder.DecodeRetireAction
-	case "spend_account":
-		decoder = a.wallet.AccountMgr.DecodeSpendAction
-	case "spend_account_unspent_output":
-		decoder = a.wallet.AccountMgr.DecodeSpendUTXOAction
-	default:
-		return nil, false
+	decoders := map[string]func([]byte) (txbuilder.Action, error){
+		"control_address":              txbuilder.DecodeControlAddressAction,
+		"control_program":              txbuilder.DecodeControlProgramAction,
+		"control_receiver":             txbuilder.DecodeControlReceiverAction,
+		"issue":                        a.wallet.AssetReg.DecodeIssueAction,
+		"retire":                       txbuilder.DecodeRetireAction,
+		"spend_account":                a.wallet.AccountMgr.DecodeSpendAction,
+		"spend_account_unspent_output": a.wallet.AccountMgr.DecodeSpendUTXOAction,
 	}
-	return decoder, true
-}
-
-// TODO modify mergeActions to loadSpendAction
-func mergeActions(req *BuildRequest) ([]map[string]interface{}, error) {
-	var actions []map[string]interface{}
-	actionMap := make(map[string]map[string]interface{})
-
-	for _, m := range req.Actions {
-		if actionType := m["type"].(string); actionType != "spend_account" {
-			actions = append(actions, m)
-			continue
-		}
-
-		if m["amount"] == nil {
-			return nil, errEmptyAmount
-		}
-
-		amountNumber := m["amount"].(json.Number)
-		amount, err := amountNumber.Int64()
-		if err != nil || amount == 0 {
-			return nil, errBadAmount
-		}
-
-		actionKey := m["asset_id"].(string) + m["account_id"].(string)
-		if tmpM, ok := actionMap[actionKey]; ok {
-			if tmpM["amount"] == nil {
-				return nil, errEmptyAmount
-			}
-
-			tmpNumber := tmpM["amount"].(json.Number)
-			tmpAmount, err := tmpNumber.Int64()
-			if err != nil || tmpAmount == 0 {
-				return nil, errBadAmount
-			}
-
-			tmpM["amount"] = json.Number(fmt.Sprintf("%v", tmpAmount+amount))
-		} else {
-			actionMap[actionKey] = m
-			actions = append(actions, m)
-		}
-	}
-
-	return actions, nil
+	decoder, ok := decoders[action]
+	return decoder, ok
 }
 
 func onlyHaveSpendActions(req *BuildRequest) bool {
@@ -103,8 +51,7 @@ func onlyHaveSpendActions(req *BuildRequest) bool {
 }
 
 func (a *API) buildSingle(ctx context.Context, req *BuildRequest) (*txbuilder.Template, error) {
-	err := a.filterAliases(ctx, req)
-	if err != nil {
+	if err := a.completeMissingIds(ctx, req); err != nil {
 		return nil, err
 	}
 
@@ -112,13 +59,9 @@ func (a *API) buildSingle(ctx context.Context, req *BuildRequest) (*txbuilder.Te
 		return nil, errors.New("transaction only contain spend actions, didn't have output actions")
 	}
 
-	reqActions, err := mergeActions(req)
-	if err != nil {
-		return nil, errors.WithDetail(err, "unmarshal json amount error in mergeActions")
-	}
-
-	actions := make([]txbuilder.Action, 0, len(reqActions))
-	for i, act := range reqActions {
+	spendActions := []txbuilder.Action{}
+	actions := make([]txbuilder.Action, 0, len(req.Actions))
+	for i, act := range req.Actions {
 		typ, ok := act["type"].(string)
 		if !ok {
 			return nil, errors.WithDetailf(errBadActionType, "no action type provided on action %d", i)
@@ -138,8 +81,14 @@ func (a *API) buildSingle(ctx context.Context, req *BuildRequest) (*txbuilder.Te
 		if err != nil {
 			return nil, errors.WithDetailf(errBadAction, "%s on action %d", err.Error(), i)
 		}
-		actions = append(actions, action)
+
+		if typ == "spend_account" {
+			spendActions = append(spendActions, action)
+		} else {
+			actions = append(actions, action)
+		}
 	}
+	actions = append(account.MergeSpendAction(spendActions), actions...)
 
 	ttl := req.TTL.Duration
 	if ttl == 0 {
@@ -191,7 +140,7 @@ func (a *API) submit(ctx context.Context, ins struct {
 		return NewErrorResponse(err)
 	}
 
-	log.WithField("tx_id", ins.Tx.ID).Info("submit single tx")
+	log.WithField("tx_id", ins.Tx.ID.String()).Info("submit single tx")
 	return NewSuccessResponse(&submitTxResp{TxID: &ins.Tx.ID})
 }
 
