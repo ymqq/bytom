@@ -42,19 +42,15 @@ all: test target release-all
 
 bytomd-simd:
 	@echo "Building bytomd to cmd/bytomd/bytomd for $(GOOS)"
-	$(CC) -o mining/tensority/lib/cSimdTs.o -c mining/tensority/lib/cSimdTs.cpp -std=c++11 -pthread -mavx2 -O3 -fopenmp
-	go build $(BUILD_FLAGS) -o cmd/bytomd/bytomd cmd/bytomd/main.go
+	@cd mining/tensority/lib && make
+	@go build $(BUILD_FLAGS) -o cmd/bytomd/bytomd cmd/bytomd/main.go
 
 bytomd:
 	@echo "Building bytomd to cmd/bytomd/bytomd"
-	@rm -f mining/tensority/*.go
-	@cp mining/tensority/legacy/*.go mining/tensority/
 	@go build $(BUILD_FLAGS) -o cmd/bytomd/bytomd cmd/bytomd/main.go
 
 bytomcli:
 	@echo "Building bytomcli to cmd/bytomcli/bytomcli"
-	@rm -f mining/tensority/*.go
-	@cp mining/tensority/legacy/*.go mining/tensority/
 	@go build $(BUILD_FLAGS) -o cmd/bytomcli/bytomcli cmd/bytomcli/main.go
 
 target:
