@@ -41,16 +41,21 @@ else
     endif
 endif
 
+TARGET = cSimdTs
+
+CCFLAGS += -std=c++11 -pthread -mavx2 -O3 -fopenmp
+
 .PHONY: clean
 
-test: cSimdTs_$(OS)$(BITS).o
+
+all: $(TARGET)_$(OS)$(BITS)
+
+test: $(TARGET)_$(OS)$(BITS)
 	cd .. && go test -v && go test -bench=.
 	rm *.o
 
-all: cSimdTs_$(OS)$(BITS).o
-
-%_$(OS)$(BITS).o: %.cpp
-	$(CC) -o $@ -c $^ -std=c++11 -pthread -mavx2 -O3 -fopenmp
+$(TARGET)_$(OS)$(BITS): $(TARGET).cpp
+	$(CC) -o $@.o -c $^ $(CCFLAGS)
 
 clean:
 	rm -f *.o *.so *.a
