@@ -95,22 +95,22 @@ clean:
 	@rm -rf cmd/bytomd/bytomd
 
 target/$(BYTOMD_BINARY32):
-	CGO_ENABLED=0 GOARCH=386 go build $(BUILD_FLAGS) -o $@ cmd/bytomd/main.go
+	GOARCH=386 go build $(BUILD_FLAGS) -o $@ cmd/bytomd/main.go
 
 target/$(BYTOMD_BINARY64):
-	CGO_ENABLED=0 GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ cmd/bytomd/main.go
+	GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ cmd/bytomd/main.go
 
 target/$(BYTOMCLI_BINARY32):
-	CGO_ENABLED=0 GOARCH=386 go build $(BUILD_FLAGS) -o $@ cmd/bytomcli/main.go
+	GOARCH=386 go build $(BUILD_FLAGS) -o $@ cmd/bytomcli/main.go
 
 target/$(BYTOMCLI_BINARY64):
-	CGO_ENABLED=0 GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ cmd/bytomcli/main.go
+	GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ cmd/bytomcli/main.go
 
 target/$(MINER_BINARY32):
-	CGO_ENABLED=0 GOARCH=386 go build $(BUILD_FLAGS) -o $@ cmd/miner/main.go
+	GOARCH=386 go build $(BUILD_FLAGS) -o $@ cmd/miner/main.go
 
 target/$(MINER_BINARY64):
-	CGO_ENABLED=0 GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ cmd/miner/main.go
+	GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ cmd/miner/main.go
 
 test:
 	@echo "====> Running go test"
