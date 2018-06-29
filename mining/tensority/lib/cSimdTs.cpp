@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <map>
 #include <mutex>
+#include <signal.h>
 #include "cSimdTs.h"
 #include "BytomPoW.h"
 #include "seed.h"

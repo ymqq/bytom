@@ -1,13 +1,13 @@
 package tensority
 
 // #cgo windows,386 CFLAGS: -I.
-// #cgo windows,386 LDFLAGS: -L./lib/ -l:cSimdTs_win32.o -lstdc++ -lgomp
+// #cgo windows,386 LDFLAGS: -L./lib/ -l:cSimdTs_win32.o -lstdc++ -lgomp -lpthread
 // #cgo windows,amd64 CFLAGS: -I.
 // #cgo windows,amd64 LDFLAGS: -L./lib/ -l:cSimdTs_win64.o -lstdc++ -lgomp
 // #cgo linux,386 CFLAGS: -I.
-// #cgo linux,386 LDFLAGS: -L./lib/ -l:cSimdTs_linux32.o -lstdc++ -lgomp
+// #cgo linux,386 LDFLAGS: -L./lib/ -l:cSimdTs_linux32.o -lstdc++ -lgomp -lpthread
 // #cgo linux,amd64 CFLAGS: -I.
-// #cgo linux,amd64 LDFLAGS: -L./lib/ -l:cSimdTs_linux64.o -lstdc++ -lgomp
+// #cgo linux,amd64 LDFLAGS: -L./lib/ -l:cSimdTs_linux64.o -lstdc++ -lgomp -lpthread
 // #cgo darwin,amd64 CFLAGS: -I. -I/usr/local/opt/llvm/include
 // #cgo darwin,amd64 LDFLAGS: -L./lib/ -lcSimdTs_darwin64.o -lstdc++ -lomp -L/usr/local/opt/llvm/lib
 // #include "./lib/cSimdTs.h"
