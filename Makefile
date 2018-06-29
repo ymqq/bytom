@@ -43,15 +43,15 @@ all: test target release-all
 bytomd-simd:
 	@echo "Building bytomd to cmd/bytomd/bytomd for $(GOOS)"
 	@cd mining/tensority/lib && make
-	@go build $(BUILD_FLAGS) -o cmd/bytomd/bytomd cmd/bytomd/main.go
+	go build $(BUILD_FLAGS) -o cmd/bytomd/bytomd cmd/bytomd/main.go
 
 bytomd:
 	@echo "Building bytomd to cmd/bytomd/bytomd"
-	@go build $(BUILD_FLAGS) -o cmd/bytomd/bytomd cmd/bytomd/main.go
+	go build $(BUILD_FLAGS) -o cmd/bytomd/bytomd cmd/bytomd/main.go
 
 bytomcli:
 	@echo "Building bytomcli to cmd/bytomcli/bytomcli"
-	@go build $(BUILD_FLAGS) -o cmd/bytomcli/bytomcli cmd/bytomcli/main.go
+	go build $(BUILD_FLAGS) -o cmd/bytomcli/bytomcli cmd/bytomcli/main.go
 
 target:
 	mkdir -p $@
@@ -95,22 +95,22 @@ clean:
 	@rm -rf cmd/bytomd/bytomd
 
 target/$(BYTOMD_BINARY32):
-	GOARCH=386 go build $(BUILD_FLAGS) -o $@ cmd/bytomd/main.go
+	CGO_ENABLED=1 GOARCH=386 go build $(BUILD_FLAGS) -o $@ cmd/bytomd/main.go
 
 target/$(BYTOMD_BINARY64):
-	GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ cmd/bytomd/main.go
+	CGO_ENABLED=1 GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ cmd/bytomd/main.go
 
 target/$(BYTOMCLI_BINARY32):
-	GOARCH=386 go build $(BUILD_FLAGS) -o $@ cmd/bytomcli/main.go
+	CGO_ENABLED=1 GOARCH=386 go build $(BUILD_FLAGS) -o $@ cmd/bytomcli/main.go
 
 target/$(BYTOMCLI_BINARY64):
-	GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ cmd/bytomcli/main.go
+	CGO_ENABLED=1 GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ cmd/bytomcli/main.go
 
 target/$(MINER_BINARY32):
-	GOARCH=386 go build $(BUILD_FLAGS) -o $@ cmd/miner/main.go
+	CGO_ENABLED=1 GOARCH=386 go build $(BUILD_FLAGS) -o $@ cmd/miner/main.go
 
 target/$(MINER_BINARY64):
-	GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ cmd/miner/main.go
+	CGO_ENABLED=1 GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ cmd/miner/main.go
 
 test:
 	@echo "====> Running go test"

@@ -22,6 +22,11 @@ import (
 	"github.com/bytom/crypto/sha3pool"
 	"github.com/bytom/protocol/bc"
    	// cfg "github.com/bytom/config"
+
+	
+
+
+	log "github.com/sirupsen/logrus"
 )
 
 const maxAIHashCached = 64
@@ -46,9 +51,9 @@ func cgoAlgorithm(blockHeader, seed *bc.Hash) *bc.Hash {
 	return &res
 }
 
-
 func algorithm(hash, seed *bc.Hash) *bc.Hash {
 	if (runtime.GOOS == "windows" || runtime.GOOS == "linux" || (runtime.GOOS == "darwin" && runtime.GOARCH == "amd64")) /*&& cfg.Config.Simd.Enable*/ {
+		log.Info("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
 		return cgoAlgorithm(hash, seed)
 	} else {
 		return legacyAlgorithm(hash, seed)
