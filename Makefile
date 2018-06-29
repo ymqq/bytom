@@ -5,7 +5,7 @@ ifeq ($(UNAME_S),Darwin)
 	CC = /usr/local/opt/llvm/bin/clang++
 else ifeq ($(UNAME_S),Linux)
 	GOOS := linux
-	CC = g++
+	CC = gcc
 else
 $(error "$$GOOS is not defined. If you are using Windows, try to re-make using 'GOOS=windows make ...' ")
 endif
@@ -58,6 +58,14 @@ target:
 
 binary: target/$(BYTOMD_BINARY32) target/$(BYTOMD_BINARY64) target/$(BYTOMCLI_BINARY32) target/$(BYTOMCLI_BINARY64) target/$(MINER_BINARY32) target/$(MINER_BINARY64)
 
+
+# CGO_ENABLED=1 GOOS=windows GOARCH=386   CC=i686-w64-mingw32-gcc-posix   CXX=i686-w64-mingw32-g++-posix   go build -ldflags "-X github.com/bytom/version.GitCommit=`git rev-parse HEAD`" -o target/bytomd-windows_386 cmd/bytomd/main.go
+# CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc-posix CXX=x86_64-w64-mingw32-g++-posix go build -ldflags "-X github.com/bytom/version.GitCommit=`git rev-parse HEAD`" -o target/bytomd-windows_amd64 cmd/bytomd/main.go
+# CGO_ENABLED=1 GOOS=linux   GOARCH=386   CC=i686-linux-gnu-gcc           CXX=i686-linux-gnu-g++           go build -ldflags "-X github.com/bytom/version.GitCommit=`git rev-parse HEAD`" -o target/bytomd-linux_386 cmd/bytomd/main.go
+# CGO_ENABLED=1 GOOS=linux   GOARCH=amd64 CC=x86_64-linux-gnu-gcc         CXX=x86_64-linux-gnu-g++         go build -ldflags "-X github.com/bytom/version.GitCommit=`git rev-parse HEAD`" -o target/bytomd-linux_amd64 cmd/bytomd/main.go
+
+
+
 ifeq ($(GOOS),windows)
 release: binary
 	cd target && cp -f $(MINER_BINARY32) $(MINER_BINARY32).exe
@@ -83,8 +91,8 @@ release: binary
 endif
 
 release-all: clean
-	GOOS=darwin  make release
-	GOOS=linux   make release
+	# GOOS=darwin  make release
+	# GOOS=linux   make release
 	GOOS=windows make release
 
 clean:
@@ -95,22 +103,22 @@ clean:
 	@rm -rf cmd/bytomd/bytomd
 
 target/$(BYTOMD_BINARY32):
-	CGO_ENABLED=1 GOARCH=386 go build $(BUILD_FLAGS) -o $@ cmd/bytomd/main.go
+	CGO_ENABLED=1 GOARCH=amd64 CC=$(CC) go build $(BUILD_FLAGS) -o $@ cmd/bytomd/main.go
 
 target/$(BYTOMD_BINARY64):
-	CGO_ENABLED=1 GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ cmd/bytomd/main.go
+	CGO_ENABLED=1 GOARCH=amd64 CC=$(CC) go build $(BUILD_FLAGS) -o $@ cmd/bytomd/main.go
 
 target/$(BYTOMCLI_BINARY32):
-	CGO_ENABLED=1 GOARCH=386 go build $(BUILD_FLAGS) -o $@ cmd/bytomcli/main.go
+	CGO_ENABLED=1 GOARCH=386 CC=$(CC) go build $(BUILD_FLAGS) -o $@ cmd/bytomcli/main.go
 
 target/$(BYTOMCLI_BINARY64):
-	CGO_ENABLED=1 GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ cmd/bytomcli/main.go
+	CGO_ENABLED=1 GOARCH=amd64 CC=$(CC) go build $(BUILD_FLAGS) -o $@ cmd/bytomcli/main.go
 
 target/$(MINER_BINARY32):
-	CGO_ENABLED=1 GOARCH=386 go build $(BUILD_FLAGS) -o $@ cmd/miner/main.go
+	CGO_ENABLED=1 GOARCH=386 CC=$(CC) go build $(BUILD_FLAGS) -o $@ cmd/miner/main.go
 
 target/$(MINER_BINARY64):
-	CGO_ENABLED=1 GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ cmd/miner/main.go
+	CGO_ENABLED=1 GOARCH=amd64 CC=$(CC) go build $(BUILD_FLAGS) -o $@ cmd/miner/main.go
 
 test:
 	@echo "====> Running go test"
