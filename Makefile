@@ -65,7 +65,6 @@ binary: target/$(BYTOMD_BINARY32) target/$(BYTOMD_BINARY64) target/$(BYTOMCLI_BI
 # CGO_ENABLED=1 GOOS=linux   GOARCH=amd64 CC=x86_64-linux-gnu-gcc         CXX=x86_64-linux-gnu-g++         go build -ldflags "-X github.com/bytom/version.GitCommit=`git rev-parse HEAD`" -o target/bytomd-linux_amd64 cmd/bytomd/main.go
 
 
-
 ifeq ($(GOOS),windows)
 release: binary
 	cd target && cp -f $(MINER_BINARY32) $(MINER_BINARY32).exe
