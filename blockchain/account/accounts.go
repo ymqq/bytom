@@ -443,7 +443,7 @@ func (m *Manager) createPubkey(ctx context.Context, accountID string) (rootXPub 
 		return chainkd.XPub{}, nil, nil, err
 	}
 
-	idx := m.nextIndex(account)
+	idx := m.nextAccountIndex(account)
 	rootXPub = account.XPubs[0]
 	path = signers.Path(account.Signer, signers.AccountKeySpace, idx)
 	derivedXPub := rootXPub.Derive(path)
