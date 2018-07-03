@@ -16,6 +16,7 @@ import "C"
 import (
 	"runtime"
 	"unsafe"
+	"fmt"
 
 	"github.com/golang/groupcache/lru"
 
@@ -30,6 +31,8 @@ import (
 )
 
 const maxAIHashCached = 64
+
+var UseSIMD = false
 
 func legacyAlgorithm(hash, seed *bc.Hash) *bc.Hash {
 	cache := calcSeedCache(seed.Bytes())
@@ -54,6 +57,7 @@ func cgoAlgorithm(blockHeader, seed *bc.Hash) *bc.Hash {
 func algorithm(hash, seed *bc.Hash) *bc.Hash {
 	if (runtime.GOOS == "windows" || runtime.GOOS == "linux" || (runtime.GOOS == "darwin" && runtime.GOARCH == "amd64")) /*&& cfg.Config.Simd.Enable*/ {
 		log.Info("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+		fmt.Println(UseSIMD)
 		return cgoAlgorithm(hash, seed)
 	} else {
 		return legacyAlgorithm(hash, seed)
