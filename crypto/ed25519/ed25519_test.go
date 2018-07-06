@@ -17,6 +17,7 @@ import (
 	"testing"
 
 	"github.com/bytom/crypto/ed25519/internal/edwards25519"
+	"fmt"
 )
 
 type zeroReader struct{}
@@ -47,11 +48,16 @@ func TestUnmarshalMarshal(t *testing.T) {
 }
 
 func TestSignVerify(t *testing.T) {
-	var zero zeroReader
-	public, private, _ := GenerateKey(zero)
+	//var zero zeroReader
+	public, private, _ := GenerateKey(nil)
 
-	message := []byte("test message")
+	fmt.Println("public:", hex.EncodeToString(public))
+	fmt.Println("private:", hex.EncodeToString(private))
+
+
+	message := []byte("hello")
 	sig := Sign(private, message)
+	fmt.Println("sig:", hex.EncodeToString(sig))
 	if !Verify(public, message, sig) {
 		t.Errorf("valid signature rejected")
 	}

@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/bytom/crypto/ed25519"
+	"fmt"
+	"encoding/hex"
 )
 
 // Testing basic InnerSign+Verify and the invariants:
@@ -22,12 +24,16 @@ func (zeroReader) Read(buf []byte) (int, error) {
 }
 
 func TestInnerSignVerify(t *testing.T) {
-	var zero zeroReader
-	public, private, _ := ed25519.GenerateKey(zero)
+	//var zero zeroReader
+	public, private, _ := ed25519.GenerateKey(nil)
+	fmt.Println("public:", hex.EncodeToString(public))
+	fmt.Println("private:", hex.EncodeToString(private))
 	expprivate := expandEd25519PrivateKey(private)
+	fmt.Println("expprivate:", hex.EncodeToString(expprivate))
 
-	message := []byte("test message")
+	message := []byte("hello")
 	sig := Ed25519InnerSign(expprivate, message)
+	fmt.Println("sig:", hex.EncodeToString(sig))
 	if !ed25519.Verify(public, message, sig) {
 		t.Errorf("valid signature rejected")
 	}

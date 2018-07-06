@@ -3,6 +3,7 @@ package bc
 import (
 	"github.com/bytom/crypto/sha3pool"
 	"github.com/bytom/errors"
+	"fmt"
 )
 
 // Tx is a wrapper for the entries-based representation of a transaction.
@@ -19,10 +20,15 @@ type Tx struct {
 // SigHash ...
 func (tx *Tx) SigHash(n uint32) (hash Hash) {
 	hasher := sha3pool.Get256()
+	fmt.Println("init hasher:", hasher)
 	defer sha3pool.Put256(hasher)
 
 	tx.InputIDs[n].WriteTo(hasher)
+	fmt.Println("input hasher:", hasher)
+
 	tx.ID.WriteTo(hasher)
+	fmt.Println("tx_id hasher:", hasher)
+
 	hash.ReadFrom(hasher)
 	return hash
 }

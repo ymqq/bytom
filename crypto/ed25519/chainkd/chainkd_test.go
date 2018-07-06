@@ -117,6 +117,9 @@ func TestChildKeys(t *testing.T) {
 	}
 	rootXPub := rootXPrv.XPub()
 
+	fmt.Println("private:", rootXPrv)
+	fmt.Println("public:", rootXPub)
+
 	msg := []byte("In the face of ignorance and resistance I wrote financial systems into existence")
 
 	sig := rootXPrv.Sign(msg)
