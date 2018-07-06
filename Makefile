@@ -102,7 +102,7 @@ clean:
 	@rm -rf cmd/bytomd/bytomd
 
 target/$(BYTOMD_BINARY32):
-	CGO_ENABLED=1 GOARCH=amd64 CC=$(CC) go build $(BUILD_FLAGS) -o $@ cmd/bytomd/main.go
+	CGO_ENABLED=1 GOARCH=i386 CC=$(CC) go build $(BUILD_FLAGS) -o $@ cmd/bytomd/main.go
 
 target/$(BYTOMD_BINARY64):
 	CGO_ENABLED=1 GOARCH=amd64 CC=$(CC) go build $(BUILD_FLAGS) -o $@ cmd/bytomd/main.go
