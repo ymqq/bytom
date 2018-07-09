@@ -363,6 +363,27 @@ func (ps *peerSet) BestPeer() (*p2p.Peer, uint64) {
 	return bestPeer, bestHeight
 }
 
+// BestPeer retrieves the known peer with the currently highest total difficulty.
+func (ps *peerSet) BestFastSyncPeer() (*p2p.Peer, uint64) {
+	ps.lock.RLock()
+	defer ps.lock.RUnlock()
+
+	var bestPeer *p2p.Peer
+	var bestHeight uint64
+
+	for _, p := range ps.peers {
+		if p.services.IsEnable(consensus.SFFastSync) {
+			if bestPeer == nil || p.height > bestHeight {
+				bestPeer, bestHeight = p.swPeer, p.height
+			}
+		} else {
+			log.Info("p.services:", p.services)
+		}
+	}
+
+	return bestPeer, bestHeight
+}
+
 // Close disconnects all peers.
 // No new peers can be registered after Close has returned.
 func (ps *peerSet) Close() {

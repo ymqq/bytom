@@ -125,8 +125,7 @@ func (bk *blockKeeper) BlockRequestWorker(peerID string, maxPeerHeight uint64) e
 	swPeer := bkPeer.getPeer()
 	for 0 < num && num <= maxPeerHeight {
 		if nextCheckPoint := bk.nextCheckpoint(); nextCheckPoint != nil {
-			_, bestHeight := bk.peers.BestPeer()
-			if bestHeight > nextCheckPoint.Height {
+			if _, bestFastSyncHeight := bk.peers.BestFastSyncPeer(); bestFastSyncHeight > nextCheckPoint.Height {
 				log.Info("Switch to fast sync mode")
 				return nil
 			}
@@ -231,36 +230,32 @@ func (bk *blockKeeper) HeadersRequest(peerID string, locator []*common.Hash) ([]
 	}
 }
 
-func (bk *blockKeeper) BlockFastSyncWorker() error {
+func (bk *blockKeeper) BlockFastSyncWorker(bestPeer *p2p.Peer, nextCheckPoint *consensus.Checkpoint) error {
 	//request blocks header
-	bestPeer, bestHeight := bk.peers.BestPeer()
-	nextCheckPoint := bk.nextCheckpoint()
 	totalHeaders := make([]types.BlockHeader, 0)
 
-	if bestHeight > nextCheckPoint.Height {
-		locator := bk.blockLocator(nil)
-		for {
-			headers, err := bk.HeadersRequest(bestPeer.Key, locator)
-			if err != nil {
-				log.Info("HeadersRequest err")
-				return err
-			}
-			err, receivedCheckpoint := bk.handleHeadersMsg(bestPeer.Key, headers)
-			if err != nil {
-				log.Info("handleHeadersMsg err")
-				return err
-			}
-			totalHeaders = append(totalHeaders, headers...)
-			if receivedCheckpoint {
-				break
-			}
-			finalHash := headers[len(headers)-1].Hash()
-			locator = []*common.Hash{common.CoreHashToHash(&finalHash)}
+	locator := bk.blockLocator(nil)
+	for {
+		headers, err := bk.HeadersRequest(bestPeer.Key, locator)
+		if err != nil {
+			log.Info("HeadersRequest err")
+			return err
 		}
-		log.Infof("Downloading headers for blocks %d to "+
-			"%d from peer %s", bk.chain.BestBlockHeight()+1,
-			bk.nextCheckpoint().Height, bestPeer.Key)
+		err, receivedCheckpoint := bk.handleHeadersMsg(bestPeer.Key, headers)
+		if err != nil {
+			log.Info("handleHeadersMsg err")
+			return err
+		}
+		totalHeaders = append(totalHeaders, headers...)
+		if receivedCheckpoint {
+			break
+		}
+		finalHash := headers[len(headers)-1].Hash()
+		locator = []*common.Hash{common.CoreHashToHash(&finalHash)}
 	}
+	log.Infof("Downloading headers for blocks %d to "+
+		"%d from peer %s", bk.chain.BestBlockHeight()+1,
+		bk.nextCheckpoint().Height, bestPeer.Key)
 
 	for e := bk.headerList.Front(); e != nil; {
 		headerList := list.New()
